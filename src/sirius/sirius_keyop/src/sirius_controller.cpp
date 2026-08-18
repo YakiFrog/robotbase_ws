@@ -255,14 +255,15 @@ namespace sirius_controller
                 shift_flag = false;
                 break;
             }
+            case ' ':
             case ',':
+            case '.':
+            case 'x':
+            case 'X':
+            case 'k':
+            case 'K':
             {
                 resetLinearVelocity();
-                shift_flag = false;
-                break;
-            }
-            case '.':
-            {
                 resetAngularVelocity();
                 shift_flag = false;
                 break;

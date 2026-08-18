@@ -9,6 +9,6 @@ velodyne_driver_node:
         repeat_delay: 0.0
         frame_id: sirius3/lidar_link
         model: VLP16
-        rpm: 1200.0
+        rpm: 600.0
         port: 2368
         timestamp_first_packet: false

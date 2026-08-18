@@ -16,7 +16,7 @@ roboteq_ros2_driver:
     pulse: 950  # エンコーダのパルス数（車輪1回転あたり: 50:1モーター用に475*2=950）
     max_speed: 1.5  # m/s
     odom_stream_interval_ms: 10
-    odom_publish_hz: 20.0
+    odom_publish_hz: 50.0
     speed_scale: 0.52 # 速度指令のスケーリング係数: 0.50 でほぼ司令した通りの速度になる
     # 55% はやすぎる
     # 45% おそすぎる
