@@ -99,9 +99,9 @@ global_costmap:
       rolling_window: true
       width: 50
       height: 50
-      track_unknown_space: false # falseにすることで、UNKNOWN領域を通過可能として扱う
+      track_unknown_space: true # trueにすることで、UNKNOWN領域を適切に処理
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"] # プラグインの読み込み順序は大事。適用順序になる。
-      filters: ["keepout_filter"]
+      # filters: ["keepout_filter"]
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -186,7 +186,7 @@ local_costmap:
       plugins: ["obstacle_layer", "inflation_layer"]
       # stvl_layer は一旦無効化（自己点群による全領域Lethalコスト問題を調査中）
       # plugins: ["stvl_layer", "obstacle_layer", "inflation_layer"]
-      track_unknown_space: false # falseにすることで、UNKNOWN領域を通過可能として扱う
+      track_unknown_space: true # trueにすることで、UNKNOWN領域によるMPPI衝突誤判定を防止
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -247,7 +247,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 10.0
-        inflation_radius: 0.60 # 外接円半径(0.544m)以上にする必要あり（MPPIコスト計算要件）
+        inflation_radius: 0.70 # 外接円半径(0.544m)以上の余裕マージン
       keepout_filter:
         plugin: "nav2_costmap_2d::KeepoutFilter"
         enabled: False  # True -> False (フィルター情報がない場合は無効化)
@@ -264,6 +264,7 @@ controller_server:
     min_x_velocity_threshold: 0.05 # 速度司令の切り捨て。切り上げではない。
     min_y_velocity_threshold: 0.0
     min_theta_velocity_threshold: 0.05
+    odom_topic: /odom/filtered
     failure_tolerance: 1.0
     progress_checker_plugins: ["progress_checker"]
     goal_checker_plugins: ["general_goal_checker"]
@@ -282,47 +283,33 @@ controller_server:
       yaw_goal_tolerance: 0.50
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 40  # 40*0.1 = 4.0秒先まで予測（CPU負荷低減）
+      time_steps: 50  # 5.0秒先まで予測
       model_dt: 0.10 # 制御周期に合わせる (10Hz)
-      batch_size: 600  # CPU実機向け軽量化（2000 -> 600: 演算遅延によるタイムアウトを解消）
+      batch_size: 800  # CPU実機向け軽量化
 
-      # 【速度と加速度の物理的チューニング指針】
-      # 1. 安全制動距離の公式: d = v^2 / (2 * a)
-      #    許容する停止距離 d を一定に保つ場合、最高速度 v は加速度(減速度) a の平方根に比例する: v = sqrt(2 * d * a)
-      #    例: 加速度 a を 1.0 -> 0.5 (半分) に下げる場合、速度 v も 1.0 -> 0.7 (sqrt(0.5)倍) に下げる。
-      # 2. 最高速度到達距離の公式: L_min = v^2 / a
-      #    ウェイポイント間の距離が L_min より短いと、加速途中で減速に入り動作がギクシャクする。
-      #    例: v=1.0, a=1.0 => L_min=1.0m (1m以上の間隔で最高速に到達可能)
-      #        v=1.0, a=0.5 => L_min=2.0m (2m必要。狭い場所では速度も0.7m/sに下げるのが良い)
-      # 3. 旋回時のブレ・蛇行防止の比率: R = v / w
-      #    線速度 vx_max を下げる場合は、最小旋回半径 R を維持するために角速度 wz_max も比例して下げるべき。
-      #    また、角加速度 az_max が高すぎるとカーブ進入/脱出時に急激な首振りと機体の揺れ(ブレ)が発生する。
-      #    例: vx_max を 1.0 -> 0.9 に下げる場合、wz_max も 1.0 -> 0.9 に下げ、az_max を 2.0 -> 1.5 程度に抑えるとスムーズになる。
-      vx_max: 0.90 # バグ修正により1.0m/sまで安定して出力可能になりました
-      vx_min: -0.60 # 後退は控えめに
+      vx_max: 0.90
+      vx_min: -0.60
       vy_max: 0.0
       vy_min: 0.0   
-      wz_max: 0.90 # 旋回上限を0.9rad/sへ引き下げ（線速度0.9m/sに同調）
+      wz_max: 0.90
       wz_min: -0.90
 
-      # これは速度の分散を決めるもの
-      vx_std: 0.25 # 速度/加速度低下に合わせて探索ノイズを抑制（振動防止）
+      vx_std: 0.25
       vy_std: 0.00
-      wz_std: 0.30 # 旋回速度/加速度低下に合わせて探索ノイズを抑制（振動防止）
-      # 曲がり角で振れる原因はここにあった。wz_std。
+      wz_std: 0.30
 
-      ax_max: 0.9 # 加速度制限を0.9に調整
-      ax_min: -0.9 # 減速度制限を-0.9に調整
+      ax_max: 0.9
+      ax_min: -0.9
       ay_max: 0.0
       ay_min: 0.0
-      az_max: 1.5 # 旋回加速度を1.5rad/s^2へ引き下げ（急な首振りを抑制）
+      az_max: 1.5
       az_min: -1.5
 
       iteration_count: 1
-      prune_distance: 6.0 # より遠くまで軌道を維持
-      transform_tolerance: 0.5 # TF許容遅延を延長（0.1 -> 0.5s）
-      temperature: 0.30 # 軌道選択のランダム性
-      gamma: 0.050 # 減衰率(未来のコストをどれだけ重視するか)
+      prune_distance: 6.0
+      transform_tolerance: 0.5
+      temperature: 0.30
+      gamma: 0.050
       motion_model: "DiffDrive"
       visualize: true
       regenerate_noises: true
@@ -330,102 +317,78 @@ controller_server:
         trajectory_step: 5
         time_step: 3
       AckermannConstraints:
-        min_turning_r: 0.0 # default 0.2 あったほうがいいのかも
+        min_turning_r: 0.0
+      retry_attempt_limit: 5
+      max_robot_pose_search_dist: 10.0
       
-      # Critics: 軌道評価基準のリスト（複数の基準でベスト軌道を選択）
-      # 各criticがコストを計算し、合計コストが最小の軌道を選ぶ
-      # cost = Σ(cost_weight × (評価値 ^ cost_power))
       critics: [
         "ConstraintCritic", "CostCritic", "GoalCritic",
         "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic",
         "PathAngleCritic", "PreferForwardCritic", "TwirlingCritic"]
       
-      # ConstraintCritic: 物理的制約（速度・加速度制限）の評価
-      # ロボットの動力学的制約を満たさない軌道にペナルティを与える
       ConstraintCritic:
         enabled: true
-        cost_power: 1              # コストの累乗（1=線形、2=二次的にペナルティ増加）
-        cost_weight: 10.0           # この評価基準の重み（大きいほど影響大） 急な動きを抑制 4.0 -> 6.0 -> 10.0 高いほど安定
+        cost_power: 1
+        cost_weight: 10.0
       
-      # GoalCritic: ゴールへの接近度評価
-      # ゴールに近づく軌道を優先（距離が近いほどコスト低）
       GoalCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 8.0           # ゴール到達を重視（高め） 5.0 -> 8.0
-        threshold_to_consider: 0.8 # この距離[m]以内でゴール評価開始
+        cost_weight: 8.0
+        threshold_to_consider: 0.8
       
-      # GoalAngleCritic: ゴール時の姿勢（角度）評価
-      # ゴール地点での向きを正確に合わせる（最終姿勢の精度）
       GoalAngleCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 1.0           # 姿勢精度の重視度（中程度）
-        # 角度合わせを最後まで遅延させる。ギリギリまで速度を維持する
-        threshold_to_consider: 0.2 # この距離[m]以内で角度評価開始
+        cost_weight: 1.0
+        threshold_to_consider: 0.2
       
-      # PreferForwardCritic: 前進優先評価
-      # 後退より前進を優先（バック走行にペナルティ）
       PreferForwardCritic:
         enabled: true
-        cost_power: 1 # 前進優先度
-        cost_weight: 10.0          # 前進を強く優先 10 -> 8.0 ちょっと柔軟にしている方がいい。これ以上は下げたらぶつかる
-        threshold_to_consider: 2.5 # この距離[m]以内で前進優先評価
+        cost_power: 1
+        cost_weight: 10.0
+        threshold_to_consider: 2.5
       
-      # CostCritic: コストマップ（障害物）評価
-      # 障害物に近い軌道にペナルティ（衝突回避の核心）!!!!!!!!!!! 超超重要
       CostCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 10.0              # 障害物回避の重み(高いほど、パスからそれて避ける) 3.81 -> 3.0
-        near_collision_cost: 150       # 衝突手前のコスト閾値 253 -> 200 
-        # ↑この値以上のコストになると警戒モード
-        critical_cost: 250.0           # 危険レベルのコスト閾値　300 -> 250 危険判定を厳しく
-        # ↑この値以上になると強いペナルティ
-        consider_footprint: false      # フットプリント評価（false=中心点・衝突耐性重視。機体自己点群による立ち往生を防止）
-        collision_cost: 1000000.0      # 衝突時の高ペナルティ（実質的に選択されない）
-        near_goal_distance: 1.0        # ゴール付近[m]での評価調整
-        trajectory_point_step: 1       # 軌道上の評価点間隔（大きいほど高速・粗い） 2 -> 1 
-        # 0        : 完全に空き（Free）
-        # 1-252    : 障害物からの距離に応じたコスト
-        # 253      : 致命的障害物（Lethal）
-        # 254      : 未知領域（No information）
-        # 255      : 衝突確定（Collision）
+        cost_weight: 8.0
+        near_collision_cost: 253
+        critical_cost: 300.0
+        consider_footprint: false
+        collision_cost: 1000000.0
+        near_goal_distance: 1.0
+        trajectory_point_step: 2
 
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 8.0               # 横偏差の重みを下げて、角を丸めた大回りを許容（12.0 -> 8.0）
-        max_path_occupancy_ratio: 0.20 # パス上の障害物許容率（5% -> 15%に緩和）
-        trajectory_point_step: 4       # 評価点間隔 4 -> 3
-        threshold_to_consider: 1.0     # この距離[m]以内でパス整合評価 0.5 -> 1.0
-        offset_from_furthest: 25       # 最遠点からのオフセット（先読み距離）20 -> 25
-        use_path_orientations: false   # パスの向き情報を使うか
+        cost_weight: 8.0
+        max_path_occupancy_ratio: 0.50
+        trajectory_point_step: 4
+        threshold_to_consider: 1.0
+        offset_from_furthest: 25
+        use_path_orientations: false
       
-      # PathFollowCritic: 経路追従評価
-      # グローバルパスの進行方向に従う（パスに沿って進む）
       PathFollowCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 8.0         # 経路追従の重視度 5.0 -> 10.0 !!!! めっちゃきく。これがパス追従になる
-        offset_from_furthest: 5        # 先読み距離を減らすことでパスの残りが少なくても評価を機能させる (10 -> 5)
-        threshold_to_consider: 0.8    # この距離[m]以内で追従評価 1.4 -> 2.0
+        cost_weight: 8.0
+        offset_from_furthest: 5
+        threshold_to_consider: 0.8
       
-      # PathAngleCritic: 経路角度評価
-      # パスの向きと軌道の向きの一致度（滑らかな追従）
       PathAngleCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 2.0               # 角度一致の重みを下げて不要な方向転換を抑制（5.0 -> 2.0）
-        offset_from_furthest: 6        # 先読み距離を減らして直前での動作安定化 (12 -> 6)
-        threshold_to_consider: 1.5     # より手前から角度評価を有効化（1.0 -> 1.5）
-        max_angle_to_furthest: 1.2     # 最大許容角度差[rad]（約57度） 1.0 -> 1.2 (寛容に)
-        mode: 0    
-                            # 評価モード（0=標準）
+        cost_weight: 2.0
+        offset_from_furthest: 6
+        threshold_to_consider: 1.5
+        max_angle_to_furthest: 1.2
+        mode: 0
       TwirlingCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 3.0      # 旋回ペナルティを課して無駄な方向転換を抑制（1.0 -> 3.0）
+        cost_weight: 3.0
 
 # コントローラサーバーからの速度指令を滑らかにする
 velocity_smoother:
@@ -537,12 +500,11 @@ map_saver:
 
 collision_monitor:
   ros__parameters:
-    enable: false
     use_sim_time: false
     base_frame_id: "sirius3/base_footprint"
     odom_frame_id: "sirius3/odom"
-    cmd_vel_in_topic: "cmd_vel_smoothed"
-    cmd_vel_out_topic: "cmd_vel"
+    cmd_vel_in_topic: "cmd_vel_collision_in"
+    cmd_vel_out_topic: "cmd_vel_collision_out"
     state_topic: "collision_monitor_state"
     transform_tolerance: 0.2
     source_timeout: 1.0

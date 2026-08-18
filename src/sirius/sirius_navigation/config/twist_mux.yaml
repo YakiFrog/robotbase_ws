@@ -12,9 +12,13 @@ twist_mux:
     # トピックの定義
     topics:
       teleop:
-        topic: "cmd_vel_direct"
+        topic: "cmd_vel_teleop"
         timeout: 0.5
         priority: 100
+      direct:
+        topic: "cmd_vel_direct"
+        timeout: 0.5
+        priority: 90
       navigation:
         topic: "cmd_vel_smoothed"  # velocity_smootherの出力を受ける（deadband適用済み）
         timeout: 0.5
