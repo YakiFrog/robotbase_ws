@@ -13,7 +13,7 @@ slam_toolbox:
     odom_frame: sirius3/odom  # オドメトリのフレーム名
     map_frame: map  # 地図のフレーム名
     base_frame: sirius3/base_footprint  # ベースフレーム名（ロボットの基準となるフレーム）
-    scan_topic: /scan3  # スキャンデータのトピック名
+    scan_topic: /scan  # スキャンデータのトピック名
     use_map_saver: true  # マップ保存機能を有効にするか
     mode: mapping  # モード設定（地図作成モード`mapping`、自己位置推定モード`localization`）
 
@@ -23,7 +23,7 @@ slam_toolbox:
     #map_start_at_dock: true  # ドックでの開始を指定（ポーズと競合）
 
     debug_logging: false  # デバッグログを有効にするか
-    throttle_scans: 0  # スキャンデータのスロットル値（1秒あたりに処理するスキャン数）
+    throttle_scans: 1  # スキャンデータのスロットル値（1秒あたりに処理するスキャン数）
     transform_publish_period: 0.02  # オドメトリの変換を発行する周期（秒）（デフォルト：0.02秒）0.02 -> 0.01
     map_update_interval: 3.0  # マップ更新のインターバル（秒）（デフォルト：５秒 -> 3 -> 1.5 -> ✕1.0（テレオペで停止したりする））
     resolution: 0.05  # 地図の解像度（メートル単位）
