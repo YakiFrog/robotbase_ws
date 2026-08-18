@@ -20,7 +20,7 @@
 | slam_toolbox | Lifecycle `active`、`map -> base` TFと `/map` を確認 |
 | Nav2 | 管理ノードすべて `active` |
 | 自律走行 | `(0, 0)`から障害物を迂回して`(4, 0)`へ到達、`SUCCEEDED` |
-| 到着姿勢 | odom位置 `(4.076, -0.075)` |
+| 到着姿勢 | 新しいDWB設定でodom位置 `(3.841, -0.164)`（許容半径0.25 m内） |
 | 停止 | 完了後の `/cmd_vel` がゼロ |
 
 ## 初回ビルド
@@ -54,10 +54,14 @@ ros2 topic pub --rate 10 /cmd_vel_teleop geometry_msgs/msg/Twist \
 
 停止は発行側で `Ctrl-C` です。`idle_twist_publisher` が自動的にゼロ指令へ戻します。
 
+`koko_keyop2` は `w/x` の直進速度と `a/d` の角速度をそれぞれ保持します。純前進を試すときは `s` で両方をゼロにしてから `w` を押します。
+
 ### SLAMで地図生成
 
 ```bash
-ros2 launch robotbase_sim mapping.launch.py
+koko_sim
+koko_rviz_sim
+koko_slamtoolbox_sim
 ```
 
 RVizの地図を見ながら `/cmd_vel_teleop` で走行します。保存例:
@@ -70,11 +74,13 @@ ros2 run nav2_map_server map_saver_cli \
 
 `robotbase_arena.yaml` と画像ファイルが生成されます。
 
-### Nav2自律移動
+### 既存地図でNav2自律移動
 
 ```bash
 # 同梱のtest_arena地図
-ros2 launch robotbase_sim navigation.launch.py
+koko_sim
+koko_rviz_sim
+koko_nav2_sim_map
 
 # SLAMで保存した任意地図
 ros2 launch robotbase_sim navigation.launch.py \
@@ -89,22 +95,40 @@ ros2 action send_goal /navigate_to_pose \
   '{pose: {header: {frame_id: map}, pose: {position: {x: 4.0, y: 0.0}, orientation: {w: 1.0}}}}'
 ```
 
+### 地図なしでSLAMしながらNav2自律移動
+
+```bash
+koko_sim
+koko_rviz_sim
+koko_nav2_sim_slam
+```
+
+`koko_nav2_sim_slam` はSLAM ToolboxとNav2を同時起動します。map serverや固定 `map -> odom` は起動せず、SLAM Toolboxが `/map` と `map -> robot/odom` を生成します。初期スキャンで地図が生成されてからRVizの「Nav2 Goal」を指定します。
+
 ### GUIなし
 
 CIやリモート端末では次を使用します。
 
 ```bash
-ros2 launch robotbase_sim mapping.launch.py gui:=false rviz:=false
-ros2 launch robotbase_sim navigation.launch.py gui:=false rviz:=false
+ros2 launch robotbase_sim sim.launch.py gui:=false
+ros2 launch robotbase_sim mapping.launch.py
+# または
+ros2 launch robotbase_sim navigation.launch.py
+# または
+ros2 launch robotbase_sim navigation_slam.launch.py
 ```
 
 `bash/bash_alias2.sh` を読み込んでいれば次の短縮名も使えます。
 
 | alias | 起動内容 |
 |---|---|
-| `robotbase_sim` | Gazebo、ロボット、センサー、twist_mux |
-| `robotbase_mapping` | 上記 + slam_toolbox + RViz |
-| `robotbase_nav` | 上記 + 地図サーバー + Nav2 + RViz |
+| `koko_sim` | Gazebo、ロボット、センサー、twist_mux |
+| `koko_rviz_sim` | RVizのみ |
+| `koko_slamtoolbox_sim` | slam_toolboxのみ |
+| `koko_nav2_sim_map` | 同梱地図サーバー + 固定localization + Nav2 |
+| `koko_nav2_sim_slam` | slam_toolbox + Nav2（map serverなし） |
+
+シミュレーションでは `koko_sim` が `twist_mux` を起動するため、`koko_twist_mux` は不要です。実機では `koko_twist_mux` を別途起動します。
 
 ## モデルの前提
 
@@ -113,6 +137,7 @@ ros2 launch robotbase_sim navigation.launch.py gui:=false rviz:=false
 | 駆動 | 差動二輪 + 前後キャスター |
 | 車輪直径 | 0.20 m |
 | トレッド幅 | 0.435 m |
+| 車輪joint軸 | `base_footprint`基準のY軸 `(0, 1, 0)` |
 | 車体外形 | 約0.85 x 0.56 m |
 | VLP16取付位置 | `base_footprint`から `(0, 0, 0.72)` m |
 | IMU取付位置 | `base_footprint`から `(0, 0, 0.28)` m |
@@ -131,27 +156,29 @@ ros2 launch robotbase_sim navigation.launch.py gui:=false rviz:=false
 
 ```text
 map                         slam_toolboxが推定
-└─ sirius3/odom             Gazeboの開始原点
-   └─ sirius3/base_footprint  Gazebo DiffDriveの動的TF
-      ├─ sirius3/base_link
-      ├─ sirius3/lidar_link
-      └─ sirius3/imu_link
+└─ robot/odom               Gazeboの開始原点
+   └─ robot/base_footprint  Gazebo DiffDriveの動的TF
+      ├─ robot/base_link
+      ├─ robot/lidar_link
+      └─ robot/imu_link
 ```
 
 ### Nav2モード
 
 ```text
 map                         固定identity TF（真値ローカライゼーション）
-└─ sirius3/odom
-   └─ sirius3/base_footprint
-      ├─ sirius3/base_link
-      ├─ sirius3/lidar_link
-      └─ sirius3/imu_link
+└─ robot/odom
+   └─ robot/base_footprint
+      ├─ robot/base_link
+      ├─ robot/lidar_link
+      └─ robot/imu_link
 ```
 
 Nav2モードでAMCLを使わない理由は、簡易環境で経路計画・制御・速度トピックを安定して試すためです。VLP16の単一ringから得る2D scanだけでAMCLを使う試験では、長距離走行時にGazebo真値から大きくずれることを確認しました。位置推定そのものを評価したい場合は、固定TFを外してAMCLまたはEKFを別途構成してください。
 
-実機側と同じ `sirius3/*` 名を採用しています。変更する場合、最低でもSDF、URDF、SLAM設定、Nav2のフレーム上書きを同時に直す必要があります。
+既定接頭辞は `robot` です。`robot.env` の `ROBOTBASE_TF_PREFIX` を変えると、alias経由のGazebo、URDF、SLAM、Nav2、RVizへ一括反映されます。
+
+各 `koko_sim` 起動は `GZ_PARTITION` にプロセス固有の接尾辞を加えます。またGazebo内部のセンサー・odom・速度トピックも `/robot/...` に分離してからROS側の標準トピックへbridgeします。このため、終了し損ねた旧GazeboやSiriusモデルが同じPCに残っても `/scan` へ混入しません。
 
 ## トピック経路
 
@@ -170,14 +197,12 @@ controller_server
   -> /cmd_vel_nav
   -> velocity_smoother
   -> /cmd_vel_smoothed
-  -> collision_monitor
-  -> /cmd_vel_safe
   -> twist_mux
   -> /cmd_vel
   -> Gazebo DiffDrive
 ```
 
-優先度はteleop 100、direct 90、navigation 10、idle 1、`/stop` lock 255です。実機の既知課題と異なり、このシミュレータではcollision monitorを速度経路へ接続済みです。また `controller_server.use_realtime_priority` は権限に依存しないよう無効化します。
+優先度はteleop 100、direct 90、navigation 10、idle 1、`/stop` lock 255です。`controller_server.use_realtime_priority` は権限に依存しないよう無効です。
 
 ## 最短の診断
 
@@ -185,8 +210,8 @@ controller_server
 ros2 topic hz /odom
 ros2 topic hz /scan
 ros2 topic hz /imu
-ros2 run tf2_ros tf2_echo sirius3/odom sirius3/base_footprint
-ros2 run tf2_ros tf2_echo sirius3/base_footprint sirius3/lidar_link
+ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
+ros2 run tf2_ros tf2_echo robot/base_footprint robot/lidar_link
 ```
 
 Nav2ゴール中:
@@ -194,22 +219,21 @@ Nav2ゴール中:
 ```bash
 ros2 lifecycle get /controller_server
 ros2 lifecycle get /planner_server
-ros2 lifecycle get /collision_monitor
 ros2 topic hz /cmd_vel_nav
 ros2 topic hz /cmd_vel_smoothed
-ros2 topic hz /cmd_vel_safe
 ros2 topic hz /cmd_vel
 ```
 
-最初に止まった境界を調べます。Nav2モードで `map -> sirius3/odom` がない場合は `map_to_sim_odom`、地図生成モードで同じTFがない場合は `/slam_toolbox` のLifecycleと `/scan` を確認します。
+最初に止まった境界を調べます。Nav2モードで `map -> robot/odom` がない場合は `map_to_odom_ground_truth`、地図生成モードで同じTFがない場合は `/slam_toolbox` のLifecycleと `/scan` を確認します。
 
 ## ファイル一覧
 
 | パス | 役割 |
 |---|---|
 | `launch/sim.launch.py` | Gazebo、bridge、TF、VLP16変換、twist_mux |
-| `launch/mapping.launch.py` | sim + slam_toolbox + RViz |
-| `launch/navigation.launch.py` | sim + 地図 + 真値localization + Nav2 + RViz |
+| `launch/mapping.launch.py` | slam_toolboxのみ |
+| `launch/navigation.launch.py` | 地図 + 真値localization + Nav2のみ |
+| `launch/navigation_slam.launch.py` | slam_toolbox + Nav2（地図なし） |
 | `models/robotbase.sdf` | 物理モデル、VLP16、IMU、DiffDrive plugin |
 | `urdf/robotbase.urdf` | robot_state_publisher用の固定TFと表示モデル |
 | `worlds/test_arena.sdf` | 外周壁と複数障害物を持つ試験場 |

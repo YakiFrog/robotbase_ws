@@ -1,8 +1,8 @@
 roboteq_ros2_driver:
   ros__parameters:
     pub_odom_tf: true
-    odom_frame: "sirius3/odom"
-    base_frame: "sirius3/base_footprint"
+    odom_frame: "robot/odom"
+    base_frame: "robot/base_footprint"
     cmdvel_topic: "cmd_vel"
     odom_topic: "odom"
     port: "/dev/roboteq"
@@ -26,4 +26,3 @@ roboteq_ros2_driver:
     encoder_sign_l: 1.0   # 左エンコーダの極性反転設定 (1.0: 前進で正)
 
 
-    

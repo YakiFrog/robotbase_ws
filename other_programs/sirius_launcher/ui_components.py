@@ -1,7 +1,4 @@
-"""
-Sirius ROS2 Launch Manager - UI Components
-UIコンポーネントの定義
-"""
+"""Robot ROS 2 Launch Manager UI components."""
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
@@ -9,6 +6,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+
+from robot_config import GZ_PARTITION, ROS_DOMAIN_ID
 
 
 class LaunchButtonUI(QWidget):
@@ -75,11 +74,12 @@ class MainWindowUI:
     """メインウィンドウのUIセットアップ"""
     
     @staticmethod
-    def setup_ui(window, tab_names=None):
+    def setup_ui(window, display_name, tab_names=None):
         """UIのセットアップ（タブ切り替え対応）"""
         from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea, QFrame, QTabWidget
 
-        window.setWindowTitle("Sirius ROS2 Launch Manager")
+        launcher_title = f"{display_name} ROS 2 Launch Manager"
+        window.setWindowTitle(launcher_title)
         window.setMinimumSize(800, 600)
 
         central_widget = QWidget()
@@ -93,7 +93,7 @@ class MainWindowUI:
         header_layout.addStretch(1)
 
         # タイトル
-        title = QLabel("Sirius ROS2 Launch Manager")
+        title = QLabel(launcher_title)
         title_font = QFont()
         title_font.setPointSize(16)
         title_font.setBold(True)
@@ -112,7 +112,9 @@ class MainWindowUI:
         main_layout.addLayout(header_layout)
 
         # 情報ラベル
-        info_label = QLabel("ボタンを押すとTerminatorのタブで起動します (--new-tab使用) | 緑●=起動中")
+        info_label = QLabel(
+            "ボタンを押すとTerminatorのタブで起動します | "
+            f"ROS_DOMAIN_ID={ROS_DOMAIN_ID} | GZ_PARTITION={GZ_PARTITION} | 緑●=起動中")
         info_label.setStyleSheet("color: gray; font-style: italic;")
         info_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(info_label)
@@ -128,7 +130,13 @@ class MainWindowUI:
         tab_widget = QTabWidget()
         tab_layouts = {}
         if tab_names is None:
-            tab_names = ["センサー・ハードウェア", "シミュレーション", "ユーティリティ", "ナビゲーション", "Pythonスクリプト", "Sirius Ear関連"]
+            tab_names = [
+                "センサー・ハードウェア",
+                "シミュレーション",
+                "ユーティリティ",
+                "ナビゲーション",
+                "リアル実験",
+            ]
         for tab_name in tab_names:
             scroll = QScrollArea()
             scroll.setWidgetResizable(True)

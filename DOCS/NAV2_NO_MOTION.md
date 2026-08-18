@@ -19,13 +19,13 @@
 - Nav2端末の完全なエラーログ
 - goal実行時のcontroller lifecycleとlocal costmap状態
 
-従って最終確定には実機再試験が必要。ただし、コードと現在のOS設定から最有力原因はかなり絞れている。
+従って最終確定には実機再試験が必要。以下の旧最有力原因は新設定で対策済み。
 
 ## 2. 結論
 
-### 最有力: RT優先度権限がないのに有効化されている
+### 旧最有力: RT優先度権限がないのに有効化されていた
 
-`params/nav2_params.yaml`:
+旧 `params/nav2_params.yaml`:
 
 ```yaml
 controller_server:
@@ -58,9 +58,9 @@ $ ulimit -r
 
 例外が非同期future内に保持され、端末へ明瞭に表示されない可能性もある。ログにメッセージがないことだけでは除外できない。
 
-### 最初の一発判定
+### 適用済みの対策
 
-`params/nav2_params.yaml` の値を一時的に次へ変更し、Nav2を完全に再起動する。
+新しい `src/robotbase_bringup/config/nav2.yaml` は次の値で固定した。
 
 ```yaml
 use_realtime_priority: false
@@ -68,10 +68,7 @@ use_realtime_priority: false
 
 動的な `ros2 param set` だけでは、既に生成済みのaction serverへ反映されない可能性がある。YAML変更後に `controller_server` を含むNav2全体を再起動する。
 
-これで `/cmd_vel_nav` が出て走行開始すれば原因確定。恒久対応は次のどちらか。
-
-- 当面 `false` で運用する
-- 実機ユーザーへRT優先度を許可し、ログアウト・ログイン後に `true` へ戻す
+実機再試験で `/cmd_vel_nav` が出て走行開始すれば、旧RT設定が原因だったと判断できる。RTを将来有効化する場合だけ、次を確認する。
 
 RTを許可する場合は `/etc/security/limits.conf` 等へユーザーの `rtprio` 上限を設定する。設定後、Nav2を起動する同じターミナルで次を確認する。
 
@@ -104,14 +101,7 @@ Roboteq:            /cmd_vel をsubscribe
 - 通常手動操作は `/cmd_vel` へ直接出せる
 - 別ワークスペースを後からsourceすると、異なるlaunch/configを使う可能性がある
 
-また `collision_monitor` のトピックは主経路と一致していない。
-
-```text
-collision input:  /cmd_vel_collision_in
-collision output: /cmd_vel_collision_out
-```
-
-この2つは現在どこにも接続されていない。ただし主経路はcollision monitorを迂回しているため、「動かない」原因ではなく「安全フィルタが効いていない」問題である。
+旧設定にあった未接続のcollision monitorは、新しい最小launchとparamsから削除した。従って今回の無走行原因にはならないが、独立した最終停止レイヤーがない点は別の安全課題として残る。
 
 ## 4. 実機での最短切り分け
 
@@ -121,13 +111,12 @@ Nav2を起動するターミナルでoverlayを確認する。
 
 ```bash
 source ~/robotbase_ws/install/setup.bash
-ros2 pkg prefix nav2_bringup
-ros2 pkg prefix sirius_navigation
+ros2 pkg prefix robotbase_bringup
 ros2 pkg prefix roboteq_ros2_driver
 ulimit -r
 ```
 
-prefixはすべて `~/robotbase_ws/install` 配下を指すこと。`ulimit -r` が49未満なら、まず `use_realtime_priority: false` で試す。
+prefixはすべて `~/robotbase_ws/install` 配下を指すこと。新設定の `use_realtime_priority` は `false`。
 
 ### 4.2 必須ノードとLifecycle
 
@@ -176,7 +165,7 @@ ros2 topic echo /cmd_vel
 | navは出るがsmoothedが無い | velocity smootherが非active、型/QoS/input不一致 | lifecycle、`node info` |
 | smoothedは出るが`/cmd_vel`が無い | mux未起動、lock、別設定を読んでいる | mux node、`/stop`、package prefix |
 | `/cmd_vel`が非ゼロだが動かない | driver以降 | Roboteq subscriber、非常停止、motor command |
-| 全段がゼロ | controllerが有効軌道を選べていない | local costmap、scan、TF、MPPIログ |
+| 全段がゼロ | controllerが有効軌道を選べていない | local costmap、scan、TF、DWBログ |
 
 手動走行と`keyop2`が既に成功しているため、`/cmd_vel`以降の故障可能性は低い。特に`keyop2`は `/cmd_vel_teleop -> twist_mux -> /cmd_vel` を通るので、同じ試験時に成功したならmuxとRoboteqの後半は正常と推定できる。
 
@@ -184,14 +173,14 @@ ros2 topic echo /cmd_vel
 
 ### 5.1 `/odom/filtered` またはTFがない
 
-Nav2のcontroller、velocity smoother、BTは `/odom/filtered` を参照する。local costmapは `sirius3/odom` をglobal frameとして使う。
+Nav2のcontroller、velocity smoother、BTは `/odom/filtered` を参照する。local costmapは `robot/odom` をglobal frameとして使う。
 
 ```bash
 ros2 topic hz /odom
 ros2 topic hz /odom/filtered
 ros2 topic echo /odom/filtered --once
-ros2 run tf2_ros tf2_echo sirius3/odom sirius3/base_footprint
-ros2 run tf2_ros tf2_echo map sirius3/base_footprint
+ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
+ros2 run tf2_ros tf2_echo map robot/base_footprint
 ```
 
 主な失敗条件:
@@ -200,19 +189,19 @@ ros2 run tf2_ros tf2_echo map sirius3/base_footprint
 - `/imu` または `/odom` のtimestamp/値が不正
 - Roboteqを `pub_odom_tf:=false` で起動したのにEKFがTFを出していない
 - 別ノードが同じTFを二重配信
-- frame名が `base_footprint` と `sirius3/base_footprint` で分裂
+- frame名が `base_footprint` と `robot/base_footprint` で分裂
 
 グローバルパスが描けても、local controllerに必要な最新TFが取れず速度を出せない場合がある。
 
 ### 5.2 `/scan` またはsensor TFがない
 
-実機用 `nav2_params.yaml` はAMCL、global costmap、local costmap、collision monitorで `/scan` を参照する。
+共通 `robotbase_bringup/config/nav2.yaml` はAMCL、global costmap、local costmapで `/scan` を参照する。
 
 ```bash
 ros2 topic hz /scan
 ros2 topic info /scan -v
 ros2 topic echo /scan --once
-ros2 run tf2_ros tf2_echo sirius3/base_footprint <scan_header_frame_id>
+ros2 run tf2_ros tf2_echo robot/base_footprint <scan_header_frame_id>
 ```
 
 見る点:
@@ -222,7 +211,7 @@ ros2 run tf2_ros tf2_echo sirius3/base_footprint <scan_header_frame_id>
 - timestampが現在時刻か
 - 距離値が全て0、NaN、範囲外でないか
 
-SIRIUSでは `scan3`、`/scan3`、`/hokuyo_scan` を使っていたが、robotbase実機設定は `/scan` に変更済み。実driverが旧topicを出している場合はここが不一致になる。
+VLP-16 driverと `velodyne_laserscan` が `/scan` を生成する。ZED/Hokuyo/旧scan topicは使用しない。
 
 ### 5.3 local costmapが未知または障害物で埋まる
 
@@ -234,14 +223,14 @@ SIRIUSでは `scan3`、`/scan3`、`/hokuyo_scan` を使っていたが、robotba
 - inflation radius 0.70 m
 - footprint 0.85 x 0.56 m
 
-`/scan` のclear rayが入らないと未知領域が残る。センサー自己点、誤TF、地面反射でロボット周囲がlethalになってもMPPIは有効軌道を出せない。
+`/scan` のclear rayが入らないと未知領域が残る。センサー自己点、誤TF、地面反射でロボット周囲がlethalになるとDWBは有効軌道を出せない。
 
 RVizで次を同時表示する。
 
 - Local Costmap
 - Local Footprint
 - LaserScan `/scan`
-- MPPI trajectories
+- DWB trajectories（必要時）
 - RobotModelとTF
 
 Nav2端末では次を探す。
@@ -292,8 +281,7 @@ ros2 topic info /cmd_vel_smoothed -v
 ソースを直してもinstall側が古い、または `sirius_jazzy_ws` を後からsourceしていると、見ているコードと実行コードが異なる。
 
 ```bash
-ros2 pkg prefix nav2_bringup
-ros2 pkg prefix sirius_navigation
+ros2 pkg prefix robotbase_bringup
 ros2 pkg prefix roboteq_ros2_driver
 ros2 pkg executables sirius_keyop
 ```
@@ -302,14 +290,13 @@ ros2 pkg executables sirius_keyop
 
 ## 6. 推奨する再試験手順
 
-1. `use_realtime_priority: false` にする
-2. robotbaseを再ビルド・sourceする
-3. `roboteq`, 必要なセンサー, `sf_real`, `twist_mux`, `nav2_real` の順に起動する
-4. `/odom/filtered`、`/scan`、TFを確認する
-5. `keyop2` は終了するか、`s` 後1秒待つ。`/stop` を解除する
-6. Nav2ゴールを送る
-7. `/cmd_vel_nav -> /cmd_vel_smoothed -> /cmd_vel` を同時記録する
-8. Nav2端末ログを保存する
+1. robotbaseを再ビルド・sourceする（新設定は `use_realtime_priority: false`）
+2. `koko_roboteq`, `koko_velodyne`, `koko_imu`, `koko_sf_real`, `koko_twist_mux`, `koko_nav2_real` の順に起動する
+3. `/odom/filtered`、`/scan`、TFを確認する
+4. `keyop2` は終了するか、`s` 後1秒待つ。`/stop` を解除する
+5. Nav2ゴールを送る
+6. `/cmd_vel_nav -> /cmd_vel_smoothed -> /cmd_vel` を同時記録する
+7. Nav2端末ログを保存する
 
 最小rosbag例:
 
@@ -337,4 +324,4 @@ ros2 bag record \
 - 実機で成功した起動順
 - 直進、旋回、停止、手動割込みの試験結果
 
-現時点の判断は「RT権限不一致が最有力、主速度topic名は整合、collision monitorは別の未接続問題」である。
+現時点の判断は「旧RT権限不一致が最有力で対策済み、主速度topic名は整合、実機再試験待ち」である。

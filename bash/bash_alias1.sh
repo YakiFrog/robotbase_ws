@@ -1,36 +1,35 @@
-# .bashrcを編集するコマンド
-alias ebash='code ~/.bashrc && source ~/.bashrc'
+# ココちゃん（robotbase_ws）専用の基本ショートカット。
+# Sirius側と共存できるよう、公開する名前はすべて koko_* に限定する。
 
-# ROSのインストールディレクトリを開くコマンド
-alias rosapt='code /opt/ros/jazzy/share/'
+_KOKO_WS="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck disable=SC1091
+source "${_KOKO_WS}/robot.env"
 
-# wsに移動するコマンド
-alias ws='cd ~/robotbase_ws/'
+# Siriusをsource済みの端末でも検索パスを混在させず、ココちゃん環境へ切り替える。
+alias koko_env='source "${_KOKO_WS}/bash/activate_koko_env.sh"'
 
-# sourceコマンド
-alias src='ws && source install/setup.bash'
+# .bashrc編集
+alias koko_ebash='code ~/.bashrc && source ~/.bashrc'
 
-# rosdepのコマンド
-alias rdep='ws && rosdep install --from-paths src --ignore-src -riy'
+# ROSのインストールディレクトリ
+alias koko_rosapt='code /opt/ros/jazzy/share/'
 
-# colconのビルドコマンド
-alias bd='ws && colcon build --symlink-install --executor sequential --allow-overriding nav2_costmap_2d'
+# robotbase_wsへ移動
+alias koko_ws='cd "${_KOKO_WS}"'
 
-# RQTコンソール起動
-alias rqt_console='ros2 run rqt_console rqt_console'
+# ココちゃん環境を有効化
+alias koko_src='koko_env && koko_ws && source install/setup.bash'
 
-# TFツリー表示
-alias tftree='ros2 run rqt_tf_tree rqt_tf_tree'
+# rosdep / build
+alias koko_rdep='koko_ws && rosdep install --from-paths src --ignore-src -riy'
+alias koko_build='koko_env && koko_ws && source /opt/ros/jazzy/setup.bash && colcon build --symlink-install --executor sequential --allow-overriding nav2_costmap_2d'
 
-# すべてのプロセスを終了し、キャッシュをクリアして再起動するコマンド
-alias restart='pkill -f "ros2|gz|gazebo" && ros2 daemon stop && ros2 daemon start && sync && sudo sh -c "echo 3 > /proc/sys/vm/drop_caches"'
+# ROS診断
+alias koko_rqt_console='koko_src && ros2 run rqt_console rqt_console'
+alias koko_tftree='koko_src && ros2 run rqt_tf_tree rqt_tf_tree'
 
-# メモリキャッシュを解放するコマンド
-alias freemem='sync && sudo sh -c "echo 3 > /proc/sys/vm/drop_caches" && echo "Memory cache cleared!"'
+# 注意: 同じDomain 57に属するROSプロセス全体へ影響する。
+alias koko_ros_daemon_restart='koko_env && ros2 daemon stop && ros2 daemon start'
 
-# foxglove
-# sudo apt install ros-$ROS_DISTRO-foxglove-bridge
-alias foxglove='ros2 launch foxglove_bridge foxglove_bridge_launch.xml'
-
-# Gazebo用リソースパス（STLメッシュなど）
-export GZ_SIM_RESOURCE_PATH=$HOME/robotbase_ws/src/sirius/sirius_description/meshes:$GZ_SIM_RESOURCE_PATH
+# メモリキャッシュ解放（システム全体へ影響するため明示名）
+alias koko_system_freemem='sync && sudo sh -c "echo 3 > /proc/sys/vm/drop_caches" && echo "Memory cache cleared!"'

@@ -1,13 +1,21 @@
-"""
-Sirius ROS2 Launch Manager - Process Management
-プロセス管理とコマンド実行の実装
-"""
+"""Robot ROS 2 Launch Manager process management."""
 
 import os
+import re
+import shlex
 import subprocess
 import tempfile
 import psutil
-from PySide6.QtCore import QTimer
+
+from robot_config import (
+    DISPLAY_NAME,
+    GZ_PARTITION,
+    LAUNCHER_ID,
+    ROBOT_ID,
+    ROS_DOMAIN_ID,
+    TAB_PREFIX,
+    TF_PREFIX,
+)
 
 
 class ProcessManager:
@@ -17,9 +25,10 @@ class ProcessManager:
         self.name = name
         self.command = command
         self.process = None
-        self.pid_file = f"/tmp/sirius_launcher_{name}.pid"
-        self.log_file = f"/tmp/sirius_launcher_{name}.log"
-        self.tab_title = name
+        safe_name = re.sub(r'[^A-Za-z0-9_.-]+', '_', name)
+        self.pid_file = f"/tmp/{LAUNCHER_ID}_{safe_name}.pid"
+        self.log_file = f"/tmp/{LAUNCHER_ID}_{safe_name}.log"
+        self.tab_title = f"{TAB_PREFIX} {name}"
         self.script_path = None
         self.pid_file_content = None
     
@@ -31,7 +40,8 @@ class ProcessManager:
                 os.remove(self.log_file)
             
             # 一時スクリプトファイルを作成
-            script_fd, self.script_path = tempfile.mkstemp(suffix='.sh', prefix='sirius_launcher_')
+            script_fd, self.script_path = tempfile.mkstemp(
+                suffix='.sh', prefix=f'{LAUNCHER_ID}_')
             
             with os.fdopen(script_fd, 'w') as f:
                 # rcfile used by `bash --rcfile` — ensure common shell env is available
@@ -41,18 +51,23 @@ class ProcessManager:
                 f.write('  # shellcheck disable=SC1090\n')
                 f.write('  source "$HOME/.bashrc" >/dev/null 2>&1\n')
                 f.write('fi\n')
-                # If the launcher process had ROS_DOMAIN_ID set, re-export it explicitly
-                ros_domain = os.environ.get('ROS_DOMAIN_ID')
-                if ros_domain:
-                    # quote in case of spaces or other chars
-                    f.write(f'export ROS_DOMAIN_ID="{ros_domain}"\n')
+                # Re-apply robot isolation after ~/.bashrc, which may source
+                # the Sirius workspace and set its ROS_DOMAIN_ID.
+                f.write(f'export ROS_DOMAIN_ID={shlex.quote(ROS_DOMAIN_ID)}\n')
+                f.write(f'export GZ_PARTITION={shlex.quote(GZ_PARTITION)}\n')
+                f.write(
+                    f'export ROBOTBASE_DISPLAY_NAME={shlex.quote(DISPLAY_NAME)}\n')
+                f.write(f'export ROBOTBASE_ID={shlex.quote(ROBOT_ID)}\n')
+                f.write(f'export ROBOTBASE_TF_PREFIX={shlex.quote(TF_PREFIX)}\n')
 
                 f.write(f'echo $BASHPID > {self.pid_file}\n')
                 f.write('unset PROMPT_COMMAND\n')
-                f.write(f'export PS1="[{self.tab_title}] $ "\n')
-                f.write(f'echo -ne "\\033]0;{self.tab_title}\\007"\n')
+                quoted_title = shlex.quote(self.tab_title)
+                f.write(f'export PS1={shlex.quote(f"{self.tab_title} $ ")}\n')
+                f.write(f'printf "\\033]0;%s\\007" {quoted_title}\n')
                 f.write(f'if command -v remotinator >/dev/null 2>&1 && [ -n "$TERMINATOR_UUID" ]; then\n')
-                f.write(f'  remotinator set_tab_title -t "{self.tab_title}" >/dev/null 2>&1\n')
+                f.write(
+                    f'  remotinator set_tab_title -t {quoted_title} >/dev/null 2>&1\n')
                 f.write(f'fi\n')
                 # ログに出力内容を保存しながら実行
                 f.write(f'{self.command} 2>&1 | tee {self.log_file}\n')

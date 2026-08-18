@@ -2,6 +2,8 @@
 
 SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動二輪ロボット向けに調整している ROS 2 Jazzy ワークスペースです。車輪径、トレッド幅、エンコーダ、車体寸法、センサー構成がSIRIUSと異なります。
 
+新機体の仮称は「ココちゃん」です。表示名、ROS Domain、Gazebo識別子は [`robot.env`](robot.env) で変更できます。この開発PC上のSIRIUSと競合しないよう、Bashコマンドは `koko_*`、ROSはDomain 57、Gazeboはpartition `koko`へ分離しています。
+
 ## 現在の状況（2026-08-19）
 
 - 実機の手動操作: 動作確認済み
@@ -10,36 +12,37 @@ SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動
 - Nav2による実機走行: 未動作。パス生成後に走り始めない
 - Gazeboシミュレータ: 構築・動作確認済み
 - シミュレータでの2D地図生成: 動作確認済み
-- シミュレータでのNav2自律移動: 動作確認済み（障害物迂回ゴール成功）
+- シミュレータでのNav2自律移動: 新しい分離launch/共通params/`robot/*` TFで動作確認済み（障害物迂回ゴール成功）
 - 原因: 実機トピックを記録していないため未確定。ただし、コード上の優先度は次のとおり
 
-1. `controller_server.use_realtime_priority: true` に対して、実機PCのRT優先度権限が未設定
+1. 旧設定の `controller_server.use_realtime_priority: true` に対して、実機PCのRT優先度権限が未設定
 2. `twist_mux` の起動漏れ、または `/cmd_vel_nav` から `/cmd_vel` までの途中停止
 3. `/odom/filtered`、`/scan`、TF、ローカルコストマップのいずれかが未更新
 4. `keyop2` または `/stop` が `twist_mux` のNav2入力より高い優先度を保持
 
-最有力は1です。現在のNav2実装では、RT権限がない状態で `use_realtime_priority: true` のままFollowPathを開始すると、速度計算スレッドが例外で終了する可能性があります。「パスは引けるが速度を出し始めない」という症状と一致します。
+最有力だった1に対し、新しい共通設定では `use_realtime_priority: false` に変更済みです。実機での再確認はまだです。
 
 詳細と実機での判定手順は [Nav2無走行の切り分け](DOCS/NAV2_NO_MOTION.md) を参照してください。
 
 ## 実機なしのGazebo実験
 
-`robotbase_sim` パッケージに、差動二輪・Velodyne VLP-16・IMUだけを持つ簡易 Gazebo Sim 環境を追加しています。実機と同じ主要寸法と `sirius3/*` TF名を使います。
+`robotbase_sim` パッケージに、差動二輪・Velodyne VLP-16・IMUだけを持つ簡易 Gazebo Sim 環境を追加しています。TFは既定で `robot/*` を使います。
 
 ```bash
 cd ~/robotbase_ws
 source install/setup.bash
 
-# SLAMで地図生成
-ros2 launch robotbase_sim mapping.launch.py
-
-# 同梱地図でNav2自律移動
-ros2 launch robotbase_sim navigation.launch.py
+# 端末1: Gazeboのみ
+koko_sim
+# 端末2: RVizのみ
+koko_rviz_sim
+# 端末3: 用途に応じて1つ
+koko_slamtoolbox_sim
+koko_nav2_sim_map
+koko_nav2_sim_slam
 ```
 
-エイリアスを読み込んでいる場合は `robotbase_mapping` と `robotbase_nav` でも起動できます。GUI不要時は末尾に `gui:=false rviz:=false` を指定します。
-
-Nav2モードは実験の再現性を優先し、Gazebo真値オドメトリへ `map -> sirius3/odom` を固定する簡易ローカライゼーションです。SLAMモードでは slam_toolbox がこのTFを推定します。構成、地図保存、操作、TFの前提は [シミュレータ詳細](DOCS/SIMULATION.md) を参照してください。
+`koko_nav2_sim_map` は同梱済み地図、`koko_nav2_sim_slam` は地図なしでSLAM ToolboxとNav2を同時に使います。GazeboとRVizはどちらのモードでも別起動です。`twist_mux` は `koko_sim` に含まれるため、シミュレーションで別起動する必要はありません。
 
 ## 速度指令の経路
 
@@ -55,7 +58,7 @@ Nav2 controller_server
 
 この主経路のトピック名はコード上は整合しています。ただし `twist_mux` は `nav2_real` から自動起動されません。別ターミナルまたはランチャーでの起動が必須です。
 
-`collision_monitor` は現在 `cmd_vel_collision_in` を待ち、`cmd_vel_collision_out` を出す設定ですが、主経路には接続されていません。したがって今回の「動かない」直接原因ではない一方、衝突監視が実走行指令に適用されない安全上の未完了項目です。
+`collision_monitor` は未接続の設定を残さず、現在の最小Nav2 launchから外しています。`/scan` はcostmap回避に使われますが、独立した最終停止レイヤーは未実装です。
 
 ## 実機の主な設定
 
@@ -86,18 +89,17 @@ source ~/robotbase_ws/bash/bash_alias2.sh
 各コマンドは別ターミナルで起動します。
 
 ```bash
-roboteq       # Roboteq。EKF使用時はdriver自身のodom TFを無効化
-velodyne      # 使用する場合
-hokuyo        # /scanを出す2D LiDAR。環境に応じて実際のdriverを確認
-imu           # IMU
-sf_real       # /odom + /imu -> /odom/filtered、odom TF
-twist_mux     # Nav2/keyop2の速度指令を /cmd_vel に統合
-nav2_real     # 地図を選択してNav2起動
-rviz2real
-keyop2        # 必要な場合のみ
+koko_roboteq       # Roboteq + ココちゃんURDF
+koko_velodyne      # VLP-16。/velodyne_points と /scan
+koko_imu           # IMU
+koko_sf_real       # /odom + /imu -> /odom/filtered、odom TF
+koko_twist_mux     # Nav2/keyop2の速度指令を /cmd_vel に統合
+koko_nav2_real     # 地図を選択してNav2のみ起動
+koko_rviz_real     # RVizのみ
+koko_keyop2        # 必要な場合のみ
 ```
 
-`フルセンサーセット` プリセットには現状 `twist_mux` と `nav2_real` が含まれていません。Nav2実機試験では個別に起動してください。
+ランチャーの「実機基本」プリセットはRoboteq、VLP-16、IMU、EKF、twist_muxを起動します。Nav2とRVizは個別起動です。
 
 ## 最短の実機診断
 
@@ -114,7 +116,7 @@ ros2 topic hz /cmd_vel
 
 ros2 topic hz /odom/filtered
 ros2 topic hz /scan
-ros2 run tf2_ros tf2_echo sirius3/odom sirius3/base_footprint
+ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
 ```
 
 最初に速度が途切れた箇所が故障境界です。`/cmd_vel_nav` が出ない場合はNav2端末で次の文字列を探してください。
@@ -130,9 +132,9 @@ Failed to make progress
 
 | パス | 役割 |
 |---|---|
-| `params/` | Nav2、EKF、SLAM等の実機・シミュレーション設定 |
-| `src/sirius/` | ロボット固有のdescription、操作、navigationノード |
-| `src/robotbase_sim/` | Gazebo Sim、VLP16/IMU、SLAM、Nav2の簡易実験環境 |
+| `src/robotbase_bringup/` | ココちゃん専用URDF、RViz、実機/シミュ共通Nav2・SLAM・EKF設定 |
+| `src/robotbase_sim/` | Gazebo SimとVLP-16/IMUの模擬センサー |
+| `src/sirius/` | 移植元コード。現在の主要launch/paramsの正本ではない |
 | `src/roboteq_ros2_jazzy_driver/` | モータ指令とホイールオドメトリ |
 | `src/navigation2/` | ワークスペース内でビルドするNav2本体 |
 | `src/slam_toolbox/` | 2D SLAM |
@@ -150,6 +152,7 @@ Failed to make progress
 - [Nav2無走行の原因候補と切り分け](DOCS/NAV2_NO_MOTION.md)
 - [設定の正本と既知の課題](DOCS/CONFIGURATION.md)
 - [Gazeboシミュレータの構成と使い方](DOCS/SIMULATION.md)
+- [ココちゃんBash・ランチャー・通信分離](DOCS/LAUNCHER.md)
 
 ## ビルド
 

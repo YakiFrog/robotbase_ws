@@ -14,26 +14,7 @@ echo "このノードは、入力された3D点群(PointCloud2)を距離情報�
 echo "クラスタ(最大6個)に分割し、それぞれの点群をトピック(cluster_0〜5)に"
 echo "出力するほか、Rviz2で可視化するための境界ボックス(viz)を出力します。"
 echo "----------------------------------------------------------"
-echo "入力となる点群トピックを選択してください:"
-echo "  [1] /velodyne_points (LiDAR 3D点群 - 推奨)"
-echo "  [2] /sam3/obstacles   (SAM3 障害物点群)"
-echo "  [3] カスタムトピック名を入力する"
-echo "=========================================================="
-echo -n "番号を入力してください (1-3): "
-read choice
-
 INPUT_TOPIC="/velodyne_points"
-
-if [ "$choice" = "2" ]; then
-    INPUT_TOPIC="/sam3/obstacles"
-elif [ "$choice" = "3" ]; then
-    echo -n "トピック名を入力してください (例: /my_points): "
-    read custom_topic
-    if [ ! -z "$custom_topic" ]; then
-        INPUT_TOPIC="$custom_topic"
-    fi
-fi
-
 echo "----------------------------------------------------------"
 echo "起動中..."
 echo "  入力トピック: $INPUT_TOPIC"

@@ -4,7 +4,7 @@ cd ~/robotbase_ws
 
 MAPS_DIR="${HOME}/robotbase_ws/maps_waypoints/maps"
 LANDMARKS_DIR="${HOME}/robotbase_ws/maps_waypoints/landmarks"
-CURRENT_MAP_STATE="${HOME}/.sirius_nav2_current_map.yaml"
+CURRENT_MAP_STATE="${HOME}/.koko_nav2_current_map.yaml"
 
 # 地図ファイル一覧を取得
 get_map_list() {
@@ -105,9 +105,10 @@ while : ;do
 
     write_current_map_state "$selected_map"
     
-    ros2 launch nav2_bringup bringup_launch.py \
-    use_sim_time:=False \
-    map:=$selected_map \
-    params_file:=${HOME}/robotbase_ws/params/nav2_params.yaml \
-    use_composition:=False
+    ros2 launch robotbase_bringup nav2.launch.py \
+    use_sim_time:=false \
+    localization:=amcl \
+    map:="$selected_map" \
+    tf_prefix:="${ROBOTBASE_TF_PREFIX:-robot}" \
+    odom_topic:=/odom/filtered
 done

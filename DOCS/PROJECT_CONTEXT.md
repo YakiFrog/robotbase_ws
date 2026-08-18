@@ -1,87 +1,110 @@
 # Project Context
 
-将来の開発者やAIが、ソース全体を再探索せず作業を始めるための短いコンテキストです。
+将来の開発者やAIが、ソース全体を再探索せず作業を始めるための短いコンテキスト。
 
 ## 一文で
 
-`robotbase_ws` はSIRIUS用ROS 2 Jazzyワークスペースを、新しいRoboteq駆動の差動二輪ロボットへ移植中のワークスペースである。
+`robotbase_ws` は、VLP-16とIMUを搭載するRoboteq駆動の差動二輪ロボット「ココちゃん」用ROS 2 Jazzyワークスペース。
 
-## 現在地
+## 現在地（2026-08-19）
 
-- 基準日: 2026-08-19
-- Git: `master`、確認時HEAD `ae53c76`
-- 手動走行: 成功
-- `keyop2`: 成功
-- Nav2グローバルパス生成: 成功
-- Nav2実走行: 未成功。経路表示後に動き始めない
-- Gazebo Sim: `src/robotbase_sim/` に構築済み
-- シミュレーションSLAM: `/scan`から地図生成を確認済み
-- シミュレーションNav2: `(0, 0)`から壁を迂回して`(4, 0)`へ到達、結果`SUCCEEDED`
-- 実機ログ・rosbag: このチェックアウトにはなし
-- 原因: 未確定。最優先でRT権限と速度トピック境界を確認する
+- 実機手動走行、`keyop2`: 成功
+- 旧Nav2: RVizにパスは出たが実機が動かなかった
+- 旧設定の最有力原因: `use_realtime_priority: true` と実機OS権限
+- 新Nav2: 専用最小設定へ置換し `use_realtime_priority: false`、実機再試験待ち
+- Gazebo SLAM: 動作確認済み
+- Gazebo Nav2: 新しい共通params、分離launch、`robot/*` TFで `(4, 0)` 到達、`SUCCEEDED`
+- 実機ログ/rosbag: このチェックアウトにはなし
 
-実機Nav2の未解決状態と、シミュレーションNav2の成功は別の結果である。シミュレータではRT優先度を無効化し、Gazebo真値オドメトリを使っている。
+## 正本
+
+最初に見る場所:
+
+1. `README.md`
+2. `src/robotbase_bringup/` — URDF、RViz、全ロボット固有params/launch
+3. `src/robotbase_sim/` — Gazeboだけ
+4. `bash/bash_alias2.sh` — ランチャーのボタン定義
+5. `DOCS/NAV2_NO_MOTION.md` — 実機切り分け
+
+ルート `params/` の旧Nav2/SLAM/EKF設定は削除済み。SIRIUS由来の `sirius_description` はRVizから呼ばない。
 
 ## ロボット固有値
 
-- 駆動: 差動二輪
-- 車輪: 直径200 mm、円周0.6283 m
+- 車輪直径/円周: 0.20 / 0.6283 m
 - トレッド: 0.435 m
-- エンコーダ: 950 pulse/回転
-- Roboteq速度入力: `/cmd_vel` (`geometry_msgs/msg/Twist`)
-- 生オドメトリ: `/odom`
-- EKFオドメトリ: `/odom/filtered`
-- Nav2 base frame: `sirius3/base_footprint`
-- Nav2 odom frame: `sirius3/odom`
-- 2D LiDAR: `/scan`
-- 3D LiDAR: `/velodyne_points`（現在の実機Nav2ではSTVLプラグイン自体が無効）
+- encoder: 950 pulse/回転
+- footprint: 前0.40、後0.45、左右0.28 m
+- 生odom: `/odom`
+- EKF odom: `/odom/filtered`
+- PointCloud2: `/velodyne_points`
+- LaserScan: `/scan`
+- IMU: `/imu`
+- TF: `map -> robot/odom -> robot/base_footprint`
+
+TFの `robot` は `robot.env` の `ROBOTBASE_TF_PREFIX` で変更可能。表示名「ココちゃん」とは独立。
+
+## 起動コマンド
+
+シミュレーション:
+
+```bash
+koko_sim
+koko_rviz_sim
+koko_slamtoolbox_sim  # 地図作成のみ
+koko_nav2_sim_map     # 既存地図でNav2
+koko_nav2_sim_slam    # 地図なし、SLAM + Nav2
+```
+
+実機:
+
+```bash
+koko_roboteq
+koko_velodyne
+koko_imu
+koko_sf_real
+koko_twist_mux
+koko_rviz_real
+koko_slamtoolbox_real # 地図生成時
+koko_nav2_real        # 自律移動時
+```
+
+GazeboとRVizは別プロセス。`koko_nav2_sim_slam` だけはSLAMとNav2を同時起動する。シミュレーションの `twist_mux` は `koko_sim` に含まれる。
 
 ## 速度指令
 
 ```text
-/cmd_vel_nav (controller_server)
-  -> /cmd_vel_smoothed (velocity_smoother)
-  -> /cmd_vel (twist_mux)
+/cmd_vel_nav
+  -> velocity_smoother
+  -> /cmd_vel_smoothed
+  -> twist_mux
+  -> /cmd_vel
   -> roboteq_ros2_driver
 ```
 
-手動優先入力は `/cmd_vel_teleop`、直通優先入力は `/cmd_vel_direct`。`twist_mux` の優先度は teleop 100、direct 90、navigation 10、idle 0。`/stop` は255。
+手動入力 `/cmd_vel_teleop` はNav2より高優先度。idleは1、`/stop` lockは255。lockが残っていてもNav2は動かない。
 
-`collision_monitor` の `cmd_vel_collision_in/out` はどこにも接続されておらず、主経路は衝突監視を迂回している。
+## Nav2無走行で最初に確認
 
-## Nav2無走行で最初に見る箇所
+```bash
+ros2 lifecycle get /controller_server
+ros2 topic hz /cmd_vel_nav
+ros2 topic hz /cmd_vel_smoothed
+ros2 topic hz /cmd_vel
+ros2 topic hz /odom/filtered
+ros2 topic hz /scan
+ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
+```
 
-1. `params/nav2_params.yaml` の `controller_server.use_realtime_priority: true`
-2. `src/navigation2/nav2_util/include/nav2_util/simple_action_server.hpp` のFollowPathスレッド開始
-3. `src/navigation2/nav2_util/src/node_utils.cpp` の `sched_setscheduler()` 例外
-4. `src/navigation2/nav2_bringup/launch/navigation_launch.py` の `cmd_vel -> cmd_vel_nav` リマップ
-5. `src/sirius/sirius_navigation/config/twist_mux.yaml`
-6. `src/roboteq_ros2_jazzy_driver/roboteq_ros2_driver/config/roboteq.yaml`
+最初に途切れる境界が原因箇所。新設定ではRT優先度を無効化済みなので、次はtwist_mux、`/stop`、odom/scan/TF更新を優先して見る。
 
-## 起動上の重要事項
+## 含めないもの
 
-- `nav2_real` はNav2だけを起動し、`twist_mux` は起動しない
-- `keyop2` は `/cmd_vel_teleop` へ出すため、動作したなら試験時に `twist_mux` が動いていた可能性が高い
-- 通常の `sirius_controller` は非アシスト時に `/cmd_vel` へ直接出せるため、その成功だけではNav2経路の健全性を証明しない
-- `roboteq` エイリアスは `pub_odom_tf:=false`。`sf_real` が `sirius3/odom -> sirius3/base_footprint` を配信する前提
-- Nav2 controller、velocity smoother、BT navigatorは `/odom/filtered` を使う
+ココちゃんの有効なUI、alias、Nav2/SLAM paramsには次を含めない。
 
-## SIRIUSから変わった主な点
+- ZED、SAM3、RTAB-MAP
+- Hokuyo、`/scan3`、`/hokuyo_scan`
+- LLM dynamic goal、status monitor、BLE gateway
+- semantic costmap、STVL
+- 外部連携タブ
 
-- 車輪円周: 0.825 -> 0.6283 m
-- トレッド: 0.40 -> 0.435 m
-- pulse: 475 -> 950
-- odom配信: 20 -> 50 Hz
-- 右左エンコーダ符号を明示
-- Nav2フットプリントを約1.20 x 0.70 mから0.85 x 0.56 mへ縮小
-- 2D LiDAR入力を `scan3`/`hokuyo_scan` から `/scan` へ統一
-- SAM3障害物入力を実機Nav2設定から除外
-- MPPIを実機CPU向けに軽量化し `DiffDrive` を維持
-
-## 調査範囲を狭める原則
-
-- 最初にルートREADMEとこのファイルを読む
-- 実機問題は `/cmd_vel_nav` から順に境界観測する
-- `src/navigation2/` は上流コードを含むため、該当シンボルが分かるまで全体探索しない
-- ロボット固有変更は原則 `params/`、`src/sirius/`、`src/roboteq_ros2_jazzy_driver/`、`bash/` を先に見る
-- シミュレータ問題は最初に `DOCS/SIMULATION.md` と `src/robotbase_sim/` だけを見る
+上流または移植元ソースが `src/sirius/` に残っていても、新しいbringupから参照しない。

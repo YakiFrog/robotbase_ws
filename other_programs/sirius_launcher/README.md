@@ -1,238 +1,75 @@
-# Sirius ROS2 Launch Manager
+# Robot ROS 2 Launch Manager
 
-ROS2ノードやlaunchファイルをGUIボタンから起動できるランチャーアプリケーション
+移植元との互換性でディレクトリ名は `sirius_launcher` のままですが、公開エントリポイントとUIは機体名設定に対応した汎用ランチャーです。現在の表示名は「ココちゃん」です。
 
-## 機能
-
-- **ワンクリック起動**: エイリアスで定義されたコマンドをボタンで簡単に起動
-- **自動エイリアス読み込み**: `.bash_alias2`ファイルから自動的にエイリアスを読み込み
-- **グループ分け**: `# GROUP: グループ名`コメントでボタンをカテゴリ別に整理
-- **プロセス管理**: 起動中のプロセスは再起動不可（ボタン無効化）
-- **ウィンドウフォーカス**: 起動中のターミナルウィンドウに切り替え可能
-- **プロセス停止**: 各プロセスを個別に停止、または全停止
-- **ステータス表示**: 各プロセスの起動状態をリアルタイムで表示
-- **Terminator対応**: Terminatorターミナルエミュレータを使用
-
-## 必要な依存関係
+## 起動
 
 ```bash
-# PySide6（既にインストール済み）
-python3 -m pip install PySide6 --break-system-packages
-
-# Terminator（ターミナルエミュレータ）
-sudo apt install terminator
-
-# wmctrl（ウィンドウフォーカス機能用、オプション）
-sudo apt install wmctrl
+cd ~/robotbase_ws/other_programs/sirius_launcher
+python3 robot_launcher.py
 ```
 
-## エイリアスファイルの書き方
-
-`.bash_alias2`ファイルで`# GROUP: グループ名`を使ってグループ分けできます：
+Bash設定を読み込んでいれば `koko_launcher` でも起動できます。デスクトップショートカットは次で再作成します。
 
 ```bash
-# GROUP: センサー・ハードウェア
+~/robotbase_ws/bash/install_launcher_shortcut.sh
+```
 
-# Roboteq起動(udevルール設定済み前提)
-alias roboteq='src && ros2 launch roboteq_ros2_driver roboteq_ros2_driver.launch.py'
+## 設定
 
-# IMU起動(udevルール設定済み前提)
-alias imu='src && ros2 launch sirius_navigation witmotion_hwt905.launch.py'
+表示名と通信分離設定の正本は `~/robotbase_ws/robot.env` です。
+
+```bash
+ROBOTBASE_DISPLAY_NAME="ココちゃん"
+ROBOTBASE_ID="koko"
+ROBOTBASE_ROS_DOMAIN_ID="57"
+ROBOTBASE_GZ_PARTITION="koko"
+ROBOTBASE_TF_PREFIX="robot"
+```
+
+表示名を変更した後はランチャーを再起動し、デスクトップショートカットのインストーラをもう一度実行してください。`ROBOTBASE_ID` はエイリアス名とプロセス管理IDに関係するため、通常は変更しません。
+
+ランチャーは `robotbase_ws/bash/bash_alias2.sh` だけを読みます。`sirius_jazzy_ws` へフォールバックしないため、両WSが同じPCにあってもボタンが入れ替わりません。
+
+## 通信とプロセスの分離
+
+- 子プロセス: `ROS_DOMAIN_ID=57`
+- Gazebo Transport: `GZ_PARTITION=koko`
+- TF prefix: `ROBOTBASE_TF_PREFIX=robot`
+- PID/ログ: `/tmp/koko_launcher_*`
+- Terminatorタブ: `[ココちゃん] koko_*`
+
+ランチャーは子ターミナルが `.bashrc` を読み、シリウス設定へ戻った後にも上記の値を再適用します。
+
+## エイリアスからボタンを作る規則
+
+`bash/bash_alias2.sh` の次のコメントを利用します。
+
+```bash
+# PRESET: 地図生成（シミュレーション）
+# PRESET_ITEMS: koko_sim,koko_slamtoolbox_sim,koko_rviz_sim
+
+# PRESET: 自律移動（シミュレーション）
+# PRESET_ITEMS: koko_sim,koko_nav2_sim_map,koko_rviz_sim
 
 # GROUP: シミュレーション
-
-# Simulation起動
-alias sim='src && ros2 launch sirius_description sim_with_ui.launch.py'
-
-# GROUP: ナビゲーション
-
-# Nav2起動(既存MAP)
-alias nav2='src && ros2 launch nav2_bringup bringup_launch.py params_file:=...'
+# 説明文
+alias koko_slamtoolbox_sim='koko_src && ros2 launch robotbase_sim mapping.launch.py'
 ```
 
-**ルール**:
-- `# GROUP: グループ名` でグループを定義
-- その後のaliasは同じグループに属する
-- alias行の前のコメントが説明として表示される
-- `alias install_packages`など、初回のみ実行するものは自動的に除外される
+- `# GROUP:` がUI内のグループ名になる
+- alias直前のコメントが説明になる
+- `# PRESET:` と `# PRESET_ITEMS:` が上部ボタンになる
+- `koko_src` と `koko_env` はGUI内で明示的な環境設定へ展開される
+- インストール用aliasとランチャー自身はボタンから除外される
 
-## 使用方法
+タブは5つです。SLAMとシミュレーションNav2は「シミュレーション」タブへ配置します。外部連携タブは削除済みで、LLMとZED/SAM3関連aliasも読み込み対象に含めません。
 
-### 1. 起動
+## テスト
 
 ```bash
-# ワークスペースのルートディレクトリから
-cd ~/sirius_jazzy_ws
-python3 other_programs/sirius_launcher/sirius_launcher.py
+cd ~/robotbase_ws
+QT_QPA_PLATFORM=offscreen \
+PYTHONPATH=other_programs/sirius_launcher \
+pytest -q other_programs/sirius_launcher/tests
 ```
-
-または実行権限を付与して直接実行：
-
-```bash
-chmod +x other_programs/sirius_launcher/sirius_launcher.py
-./other_programs/sirius_launcher/sirius_launcher.py
-```
-
-### 2. エイリアス登録（推奨）
-
-`.bashrc`または`.bash_alias2`に追加：
-
-```bash
-alias launcher='python3 ${HOME}/sirius_jazzy_ws/other_programs/sirius_launcher/sirius_launcher.py'
-```
-
-その後：
-
-```bash
-launcher
-```
-
-## 使い方
-
-1. **起動**: 各ボタンをクリックするとTerminatorウィンドウが開き、対応するROSノードが起動
-2. **ウィンドウ表示**: 起動中のプロセスのターミナルにフォーカス
-3. **停止**: 個別のプロセスを停止、または「全て停止」ボタンで全プロセスを停止
-4. **ステータス確認**: 各行の「起動中」「停止中」でステータスを確認
-
-## エイリアスの追加・変更
-
-1. `.bash_alias2`ファイルを編集
-2. 必要に応じて`# GROUP:`でグループを定義
-3. 新しいaliasを追加
-4. ランチャーを再起動すると自動的に反映
-
-例：
-```bash
-# GROUP: 新しいグループ
-
-# 新しいノード起動
-alias newnode='src && ros2 launch my_package my_launch.py'
-```
-
-## 注意事項
-
-- 起動中のプロセスボタンは無効化され、再度起動できません
-- プロセスが終了すると自動的にボタンが再度有効になります
-- ウィンドウフォーカス機能は`wmctrl`がインストールされている場合のみ動作します
-- 各プロセスは独立したTerminatorウィンドウで実行されます
-- エイリアスファイルは`~/sirius_jazzy_ws/bash/.bash_alias2`を参照します
-
-## トラブルシューティング
-
-### Terminatorが起動しない
-Terminatorをインストールしてください：
-```bash
-sudo apt install terminator
-```
-
-### ウィンドウフォーカスが動作しない
-`wmctrl`をインストールしてください：
-```bash
-sudo apt install wmctrl
-```
-
-### エイリアスが読み込まれない
-- `.bash_alias2`ファイルが`~/sirius_jazzy_ws/bash/`に存在するか確認
-- エイリアスの形式が正しいか確認（`alias name='command'`）
-- グループ定義が`# GROUP: グループ名`の形式か確認
-
-### ボタンを押してもターミナルが開かない
-- Terminatorが正しくインストールされているか確認
-- コマンドが正しいか確認（ターミナルから手動で実行してテスト）
-
-## 使用方法
-
-### 1. 起動
-
-```bash
-# ワークスペースのルートディレクトリから
-cd ~/sirius_jazzy_ws
-python3 other_programs/sirius_launcher/sirius_launcher.py
-```
-
-または実行権限を付与して直接実行：
-
-```bash
-chmod +x other_programs/sirius_launcher/sirius_launcher.py
-./other_programs/sirius_launcher/sirius_launcher.py
-```
-
-### 2. エイリアス登録（オプション）
-
-`.bashrc`または`.bash_alias2`に追加：
-
-```bash
-alias launcher='python3 ${HOME}/sirius_jazzy_ws/other_programs/sirius_launcher/sirius_launcher.py'
-```
-
-その後：
-
-```bash
-launcher
-```
-
-## 使い方
-
-1. **起動**: 各ボタンをクリックするとターミナルウィンドウが開き、対応するROSノードが起動
-2. **ウィンドウ表示**: 起動中のプロセスのターミナルにフォーカス
-3. **停止**: 個別のプロセスを停止、または「全て停止」ボタンで全プロセスを停止
-4. **ステータス確認**: 各行の「起動中」「停止中」でステータスを確認
-
-## ボタン一覧
-
-### センサー・ハードウェア
-- **Roboteq**: モータコントローラー
-- **Velodyne**: LiDARセンサー
-- **Hokuyo**: レーザースキャナー
-- **IMU**: IMUセンサー
-
-### シミュレーション
-- **Simulation**: Gazeboシミュレーション
-
-### ナビゲーション
-- **Sensor Fusion**: センサーフュージョン (EKF)
-- **Sensor Fusion + IMU**: センサーフュージョン + IMU自動起動
-- **Nav2**: Nav2（既存MAP使用）
-- **SLAM Toolbox**: SLAMマッピング
-
-### ユーティリティ
-- **Sirius Controller**: キーボード制御
-
-## 注意事項
-
-- 起動中のプロセスボタンは無効化され、再度起動できません
-- プロセスが終了すると自動的にボタンが再度有効になります
-- ウィンドウフォーカス機能は`wmctrl`がインストールされている場合のみ動作します
-- 各プロセスは独立したターミナルウィンドウで実行されます
-
-## トラブルシューティング
-
-### ウィンドウフォーカスが動作しない
-`wmctrl`をインストールしてください：
-```bash
-sudo apt install wmctrl
-```
-
-### ボタンを押してもターミナルが開かない
-`gnome-terminal`が利用可能か確認してください。別のターミナルエミュレータを使用している場合は、スクリプト内の`gnome-terminal`を変更してください。
-
-### プロセスが停止しない
-「全て停止」ボタンを使用するか、ターミナルから直接Ctrl+Cで停止してください。
-
-### ROS_DOMAIN_ID がランチャー経由で反映されない
-
-原因: ランチャーは Terminator を起動するときに `bash --rcfile <一時スクリプト>` を使います。`--rcfile` を使うと通常の `~/.bashrc` は読み込まれず、一時スクリプトだけが初期化ファイルとして読まれるため、そこでエクスポートしている環境変数（例: `ROS_DOMAIN_ID`）が反映されないことがあります。また、ランチャー自身が GUI やデスクトップから起動されている場合は、親プロセスに `ROS_DOMAIN_ID` が設定されていないため継承されないケースがあります。
-
-対処法:
-
-- ランチャーを `ROS_DOMAIN_ID` を設定した端末から起動する（例: `export ROS_DOMAIN_ID=42` の後で `launcher` を起動）。この場合ランチャーが持つ環境が子プロセスに継承されます。
-- ランチャー側で一時スクリプトの先頭に `source ~/.bashrc` を試みるように修正しました（もし `~/.bashrc` にエクスポートがあれば読み込まれます）。さらに、ランチャーのプロセス環境に `ROS_DOMAIN_ID` が含まれていれば、その値を一時スクリプトに明示的に `export ROS_DOMAIN_ID=...` するようにしています。
-- それでも確実に固定したい場合は `~/.profile` や `~/.bashrc` に `export ROS_DOMAIN_ID=...` を書いて、デスクトップ起動時にも確実に環境が設定されるようにしてください。
-
-テスト方法（手動）:
-
-1. ターミナルで `export ROS_DOMAIN_ID=99` を実行
-2. 同じターミナルからランチャーを起動 (`launcher` など)
-3. ランチャーのボタンでノードを起動し、起動したターミナル内で `echo $ROS_DOMAIN_ID` を確認 -> `99` が返る
-
-ご不明な点があれば、使っている起動方法（端末から起動／メニューから起動など）を教えてください。

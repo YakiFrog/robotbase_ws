@@ -9,6 +9,7 @@
 3. [ARCHITECTURE.md](ARCHITECTURE.md) — ノード、トピック、SIRIUSとの差分を理解する
 4. [CONFIGURATION.md](CONFIGURATION.md) — 設定の正本と既知の不整合を確認する
 5. [SIMULATION.md](SIMULATION.md) — 実機なしで地図生成・Nav2走行を試す
+6. [LAUNCHER.md](LAUNCHER.md) — ココちゃん用Bash、UI、SIRIUSとの分離設定
 
 ## AIへ調査を依頼するとき
 

@@ -1,20 +1,31 @@
 #!/usr/bin/env python3
-"""
-Sirius ROS2 Launch Manager (New Tab Version)
-ROSノードやlaunchファイルをGUIボタンから起動するランチャーアプリケーション
-Terminatorの--new-tabオプションを使用したシンプル版
-起動状態追跡と停止ボタン機能付き
-"""
+"""Configurable robot ROS 2 launch manager."""
 
-import sys
+import os
 import signal
-from pathlib import Path
+import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PySide6.QtCore import QTimer, QEvent
 
 from alias_parser import parse_bash_aliases
 from ui_components import LaunchButtonUI, MainWindowUI
 from process_manager import ProcessManager
+from robot_config import (
+    ALIAS_FILE,
+    DISPLAY_NAME,
+    GZ_PARTITION,
+    ROBOT_ID,
+    ROS_DOMAIN_ID,
+)
+
+
+TAB_NAMES = [
+    "センサー・ハードウェア",
+    "シミュレーション",
+    "ユーティリティ",
+    "ナビゲーション",
+    "リアル実験",
+]
 
 
 class LaunchButton(LaunchButtonUI):
@@ -148,8 +159,8 @@ class LaunchButton(LaunchButtonUI):
         return super().eventFilter(watched, event)
 
 
-class SiriusLauncher(QMainWindow):
-    """Sirius ROS2 Launch Manager メインウィンドウ"""
+class RobotLauncher(QMainWindow):
+    """Robot ROS 2 Launch Manager main window."""
     
     def __init__(self):
         super().__init__()
@@ -162,7 +173,8 @@ class SiriusLauncher(QMainWindow):
     
     def setup_ui(self):
         """UIのセットアップ"""
-        self.preset_layout, self.tab_layouts, self.tab_widget, self.reload_btn = MainWindowUI.setup_ui(self)
+        self.preset_layout, self.tab_layouts, self.tab_widget, self.reload_btn = MainWindowUI.setup_ui(
+            self, DISPLAY_NAME, TAB_NAMES)
         self.reload_btn.clicked.connect(self.reload_launcher)
 
     def add_group(self, title, tab_name=None):
@@ -178,20 +190,12 @@ class SiriusLauncher(QMainWindow):
     
     def load_aliases(self):
         """エイリアスファイルを読み込んでボタンを作成"""
-        script_ws = Path(__file__).resolve().parent.parent.parent
-        possible_paths = [
-            script_ws / "bash" / "bash_alias2.sh",
-            Path.home() / "robotbase_ws" / "bash" / "bash_alias2.sh",
-            Path.home() / "sirius_jazzy_ws" / "bash" / "bash_alias2.sh",
-        ]
-        alias_file = None
-        for p in possible_paths:
-            if p.exists():
-                alias_file = p
-                break
-
-        if not alias_file:
-            QMessageBox.warning(self, "警告", "エイリアスファイルが見つかりません。")
+        # Never fall back to the Sirius workspace: this launcher belongs to
+        # robotbase_ws and must remain safe when both workspaces coexist.
+        alias_file = ALIAS_FILE
+        if not alias_file.exists():
+            QMessageBox.warning(
+                self, "警告", f"エイリアスファイルが見つかりません。\n{alias_file}")
             return
 
         groups, presets = parse_bash_aliases(str(alias_file))
@@ -206,7 +210,7 @@ class SiriusLauncher(QMainWindow):
             self.add_preset_button(preset_name, items)
 
         # タブ名リスト（ui_components.pyのデフォルトと合わせる）
-        tab_names_list = ["センサー・ハードウェア", "シミュレーション", "ユーティリティ", "ナビゲーション", "Pythonスクリプト", "Sirius Ear関連"]
+        tab_names_list = TAB_NAMES
         for i, name in enumerate(tab_names_list):
             self.original_tab_names[i] = name
 
@@ -317,10 +321,17 @@ class SiriusLauncher(QMainWindow):
 
 
 def main():
+    # Apply robot-specific isolation only to the launcher and its children.
+    # The parent Sirius shell keeps its original environment.
+    os.environ['ROS_DOMAIN_ID'] = ROS_DOMAIN_ID
+    os.environ['GZ_PARTITION'] = GZ_PARTITION
+    os.environ['ROBOTBASE_DISPLAY_NAME'] = DISPLAY_NAME
+    os.environ['ROBOTBASE_ID'] = ROBOT_ID
+
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
     
-    window = SiriusLauncher()
+    window = RobotLauncher()
     window.show()
     
     # Ctrl+Cでの終了を処理

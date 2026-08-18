@@ -4,23 +4,54 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, TimerAction
+from launch.actions import (
+    DeclareLaunchArgument,
+    ExecuteProcess,
+    LogInfo,
+    SetEnvironmentVariable,
+    TimerAction,
+)
 from launch.conditions import IfCondition, UnlessCondition
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, PythonExpression
 from launch_ros.actions import Node
+from nav2_common.launch import ReplaceString
 
 
 def generate_launch_description():
     pkg_share = get_package_share_directory('robotbase_sim')
+    bringup_share = get_package_share_directory('robotbase_bringup')
     world = os.path.join(pkg_share, 'worlds', 'test_arena.sdf')
     model = os.path.join(pkg_share, 'models', 'robotbase.sdf')
-    urdf = os.path.join(pkg_share, 'urdf', 'robotbase.urdf')
-    mux_config = os.path.join(pkg_share, 'config', 'twist_mux.yaml')
+    urdf = os.path.join(bringup_share, 'urdf', 'robotbase.urdf')
+    mux_config = os.path.join(bringup_share, 'config', 'twist_mux.yaml')
 
     with open(urdf, 'r', encoding='utf-8') as urdf_file:
         robot_description = urdf_file.read()
 
     gui = LaunchConfiguration('gui')
+    tf_prefix = LaunchConfiguration('tf_prefix')
+    frame_prefix = PythonExpression(["'", tf_prefix, "/'"])
+    base_partition = os.environ.get('GZ_PARTITION', 'koko')
+    session_partition = f'{base_partition}_sim_{os.getpid()}'
+    configured_model = ReplaceString(
+        source_file=model,
+        replacements={'ROBOTBASE_TF_PREFIX': tf_prefix},
+    )
+
+    def gz_topic(name):
+        return PathJoinSubstitution(['/', tf_prefix, name])
+
+    def bridge_arg(name, type_suffix):
+        return PythonExpression([
+            "'/' + '", tf_prefix, f"' + '/{name}{type_suffix}'",
+        ])
+
+    gz_cmd_vel = gz_topic('cmd_vel')
+    gz_odom = gz_topic('odom')
+    gz_tf = gz_topic('tf')
+    gz_joint_states = gz_topic('joint_states')
+    gz_points = gz_topic('velodyne_points/points')
+    gz_imu = gz_topic('imu')
 
     gazebo_gui = ExecuteProcess(
         cmd=['gz', 'sim', '-r', world],
@@ -40,7 +71,7 @@ def generate_launch_description():
         parameters=[{
             'use_sim_time': True,
             'robot_description': robot_description,
-            'frame_prefix': 'sirius3/',
+            'frame_prefix': frame_prefix,
         }],
     )
 
@@ -49,8 +80,8 @@ def generate_launch_description():
         executable='create',
         output='screen',
         arguments=[
-            '-file', model,
-            '-name', 'sirius3',
+            '-file', configured_model,
+            '-name', tf_prefix,
             '-x', '0.0', '-y', '0.0', '-z', '0.01', '-Y', '0.0',
         ],
     )
@@ -62,17 +93,22 @@ def generate_launch_description():
         output='screen',
         arguments=[
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
-            '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-            '/model/sirius3/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/model/sirius3/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-            '/joint_states@sensor_msgs/msg/JointState[gz.msgs.Model',
-            '/velodyne_points/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked',
-            '/imu@sensor_msgs/msg/Imu[gz.msgs.IMU',
+            bridge_arg('cmd_vel', '@geometry_msgs/msg/Twist]gz.msgs.Twist'),
+            bridge_arg('odom', '@nav_msgs/msg/Odometry[gz.msgs.Odometry'),
+            bridge_arg('tf', '@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'),
+            bridge_arg('joint_states', '@sensor_msgs/msg/JointState[gz.msgs.Model'),
+            bridge_arg(
+                'velodyne_points/points',
+                '@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked'),
+            bridge_arg('imu', '@sensor_msgs/msg/Imu[gz.msgs.IMU'),
         ],
         remappings=[
-            ('/model/sirius3/odom', '/odom'),
-            ('/model/sirius3/tf', '/tf'),
-            ('/velodyne_points/points', '/velodyne_points'),
+            (gz_cmd_vel, '/cmd_vel'),
+            (gz_odom, '/odom'),
+            (gz_tf, '/tf'),
+            (gz_joint_states, '/joint_states'),
+            (gz_points, '/velodyne_points'),
+            (gz_imu, '/imu'),
         ],
     )
 
@@ -111,9 +147,12 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        SetEnvironmentVariable('GZ_PARTITION', session_partition),
+        LogInfo(msg=f'Gazebo session partition: {session_partition}'),
         DeclareLaunchArgument(
             'gui', default_value='true',
             description='Start the Gazebo GUI. Set false for a headless run.'),
+        DeclareLaunchArgument('tf_prefix', default_value='robot'),
         gazebo_gui,
         gazebo_headless,
         robot_state_publisher,

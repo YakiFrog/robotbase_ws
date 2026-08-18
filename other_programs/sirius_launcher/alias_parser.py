@@ -1,10 +1,13 @@
-"""
-Sirius ROS2 Launch Manager - Alias Parser
-bash_alias2ファイルのパーサー
-"""
+"""Robot ROS 2 Launch Manager alias parser."""
 
 import re
+import shlex
 from pathlib import Path
+
+from robot_config import (
+    ENV_ALIAS,
+    SOURCE_ALIAS,
+)
 
 
 def parse_bash_aliases(alias_file_path):
@@ -70,16 +73,26 @@ def parse_bash_aliases(alias_file_path):
                     alias_name = match.group(1).strip()
                     command = match.group(2).strip()
                     
-                    if alias_name in ['install_packages']:
+                    if alias_name.endswith('install_packages') or alias_name.endswith('launcher'):
                         i += 1
                         continue
-                    
-                    # src && を実際のコマンドに展開
-                    if command.startswith('src && '):
-                        ws_dir = Path(alias_file_path).resolve().parent.parent
-                        setup_bash = ws_dir / "install" / "setup.bash"
-                        command = command.replace('src && ', 
-                            f'cd {ws_dir} && source {setup_bash} && ')
+
+                    # The GUI is independent of ~/.bashrc. Expand the two
+                    # robot-specific helper aliases into explicit commands.
+                    ws_dir = Path(alias_file_path).resolve().parent.parent
+                    setup_bash = ws_dir / 'install' / 'setup.bash'
+                    activate_script = ws_dir / 'bash' / 'activate_koko_env.sh'
+                    env_command = f'source {shlex.quote(str(activate_script))}'
+                    source_command = (
+                        f'{env_command} && cd {shlex.quote(str(ws_dir))} && '
+                        f'source {shlex.quote(str(setup_bash))}'
+                    )
+                    if command.startswith(f'{SOURCE_ALIAS} && '):
+                        command = command.replace(
+                            f'{SOURCE_ALIAS} && ', f'{source_command} && ', 1)
+                    elif command.startswith(f'{ENV_ALIAS} && '):
+                        command = command.replace(
+                            f'{ENV_ALIAS} && ', f'{env_command} && ', 1)
                     
                     description = current_description if current_description else alias_name
                     

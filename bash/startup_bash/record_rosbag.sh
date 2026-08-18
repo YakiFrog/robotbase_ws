@@ -61,20 +61,13 @@ input_filename() {
     echo "保存先: $ROSBAG_DIR"
     echo ""
     echo "記録対象トピック:"
-    echo "  - /scan3 (2D LiDAR)"
+    echo "  - /scan (VLP-16から生成した2D LiDAR)"
     echo "  - /odom, /odom/filtered (オドメトリ)"
-    echo "  - /imu, /magnetometer (IMU)"
+    echo "  - /imu (IMU)"
     echo "  - /tf, /tf_static (座標変換)"
     echo "  - /cmd_vel, /cmd_vel_nav (速度指令)"
     echo "  - /amcl_pose, /initialpose (位置推定)"
     echo "  - /map, /plan, /optimal_trajectory (地図・経路)"
-    echo "  - /blinker_led_command (ウインカー)"
-    echo "  - /npc/odom (NPC Odometry)"
-    echo "  - /target_detector/target_markers, /target_follower/status"
-    echo "  - /robot_path"
-    echo "  - /robot_path_marker"
-    echo "  - /llm_instruction, /sirius/command_queue, /sirius/landmark_status, /sirius/landmark_markers"
-    echo "  - /nav_control, /stop, /sirius/battery_status"
     echo "  - /cmd_vel_teleop"
     echo "  - /global_costmap/costmap, /local_costmap/costmap, /local_costmap/published_footprint (コストマップ・フットプリント)"
     echo ""
@@ -133,11 +126,10 @@ start_recording() {
 
     ros2 bag record -o "$CURRENT_BAG_PATH" \
         /experiment_metadata \
-        /scan3 \
+        /scan \
         /odom \
         /odom/filtered \
         /imu \
-        /magnetometer \
         /tf \
         /tf_static \
         /cmd_vel \
@@ -151,18 +143,6 @@ start_recording() {
         /local_costmap/costmap \
         /local_costmap/published_footprint \
         /roboteq/odom \
-        /blinker_led_command \
-        /npc/odom \
-        /target_detector/target_markers \
-        /robot_path \
-        /robot_path_marker \
-        /llm_instruction \
-        /sirius/command_queue \
-        /sirius/landmark_status \
-        /sirius/landmark_markers \
-        /nav_control \
-        /stop \
-        /sirius/battery_status \
         /cmd_vel_teleop \
         /joint_states &
     

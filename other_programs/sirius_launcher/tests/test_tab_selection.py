@@ -9,9 +9,11 @@ sys.path.insert(0, str(Path.cwd().joinpath('other_programs', 'sirius_launcher'))
 
 from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QMouseEvent
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtCore import QEvent, QPointF, Qt
 
-from other_programs.sirius_launcher.sirius_launcher import SiriusLauncher
+from other_programs.sirius_launcher.robot_launcher import RobotLauncher
+from other_programs.sirius_launcher.alias_parser import parse_bash_aliases
+from other_programs.sirius_launcher.robot_config import ALIAS_FILE
 
 
 class TestTabSelection(unittest.TestCase):
@@ -21,7 +23,7 @@ class TestTabSelection(unittest.TestCase):
         cls.app = QApplication([])
 
     def test_select_tab_on_click_running(self):
-        window = SiriusLauncher()
+        window = RobotLauncher()
         layout, group_widget = window.add_group('TestGroup', tab_name='センサー・ハードウェア')
         window.add_button(layout, 'Test', 'echo "Test"', 'desc', group_widget)
         btn = window.buttons[-1]
@@ -29,10 +31,34 @@ class TestTabSelection(unittest.TestCase):
         btn.process_manager.is_running = lambda: True
 
         # Simulate mouse press on the launch button (child widget event filter should catch it)
-        event = QMouseEvent(QMouseEvent.MouseButtonPress, QPoint(1, 1), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier)
+        point = QPointF(1, 1)
+        event = QMouseEvent(
+            QEvent.MouseButtonPress,
+            point,
+            point,
+            point,
+            Qt.LeftButton,
+            Qt.LeftButton,
+            Qt.NoModifier,
+        )
         btn.launch_btn.event(event)
 
         self.assertEqual(window.tab_widget.currentIndex(), btn.tab_index)
+
+    def test_simulation_commands_are_grouped_and_split_by_map_mode(self):
+        groups, presets = parse_bash_aliases(ALIAS_FILE)
+        simulation_names = [item[0] for item in groups['シミュレーション']]
+        real_names = [item[0] for item in groups['リアル実験']]
+
+        self.assertIn('koko_slamtoolbox_sim', simulation_names)
+        self.assertIn('koko_nav2_sim_map', simulation_names)
+        self.assertIn('koko_nav2_sim_slam', simulation_names)
+        self.assertNotIn('koko_twist_mux', simulation_names)
+        self.assertIn('koko_twist_mux', real_names)
+
+        preset_names = [name for name, _ in presets]
+        self.assertIn('自律移動（シミュレーション）', preset_names)
+        self.assertIn('SLAMしながら自律移動（シミュレーション）', preset_names)
 
 
 if __name__ == '__main__':

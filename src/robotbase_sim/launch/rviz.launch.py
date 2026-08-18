@@ -16,9 +16,10 @@ def generate_launch_description():
         DeclareLaunchArgument('tf_prefix', default_value='robot'),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(bringup, 'launch', 'slam.launch.py')),
+                os.path.join(bringup, 'launch', 'rviz.launch.py')),
             launch_arguments={
                 'use_sim_time': 'true',
+                'publish_description': 'false',
                 'tf_prefix': tf_prefix,
             }.items(),
         ),
