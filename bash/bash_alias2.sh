@@ -1,0 +1,221 @@
+# PRESET: フルセンサーセット
+# PRESET_ITEMS: roboteq,velodyne,hokuyo,imu,sf_real
+
+# PRESET: シミュレータセット
+# PRESET_ITEMS: rte,rviz2sim,sf_sim,odom_path
+
+# TAB: センサー・ハードウェア
+# GROUP: センサー・ハードウェア
+
+# Roboteq起動(udevルール設定済み前提)
+alias roboteq='src && ros2 launch roboteq_ros2_driver roboteq_ros2_driver.launch.py pub_odom_tf:=false'
+
+alias roboteq_no_sf='src && ros2 launch roboteq_ros2_driver roboteq_ros2_driver.launch.py pub_odom_tf:=true'
+
+# Velodyne起動
+alias velodyne='src && ros2 launch velodyne velodyne-all-nodes-VLP16-composed-launch.py'
+
+# Sirius Controller起動
+alias scn='src && ros2 run sirius_keyop sirius_controller_node'
+
+# Hokuyo起動(udevルール設定済み前提)
+alias hokuyo='src && ros2 launch urg_node2 urg_node2.launch.py'
+
+# IMU起動(udevルール設定済み前提)
+alias imu='src && ros2 launch sirius_navigation witmotion_hwt905.launch.py'
+
+# TAB: シミュレーション
+# GROUP: シミュレーション
+
+# Simulation起動
+alias sim='src && ros2 launch sirius_description sim_with_ui.launch.py'
+
+# Unity ROS-TCP Endpoint起動
+alias rte='bash ~/robotbase_ws/bash/startup_bash/start_ros_tcp.sh'
+
+# Rviz2起動(シミュレーション)
+alias rviz2sim='src && ros2 launch sirius_description display.launch.py use_sim_time:=true'
+
+# Rviz2起動(互換用)
+alias rviz2desc='rviz2sim'
+
+# Unity同期用Rviz2起動
+# alias unity_viz='src && ros2 launch sirius_description unity_sim.launch.py'
+
+# Rosbridge Web Socket起動
+alias rosbridge='src && ros2 launch rosbridge_server rosbridge_websocket_launch.xml'
+
+# Foxglove Bridge 起動
+alias foxglove='echo "My IP: $(hostname -I)" && src && ros2 launch foxglove_bridge foxglove_bridge_launch.xml'
+
+# Unity上のZEDカメラのトピックをROS2に流す
+alias sam3_bridge='src && ros2 launch sirius_navigation sam3_bridge.launch.py use_sim_time:=true'
+
+# RTAB-MAP, sam3_bridgeも起動する
+alias rtab_bridge='bash ~/robotbase_ws/bash/startup_bash/rtab_bridge.sh'
+
+alias sam3_map_load='bash ~/robotbase_ws/bash/startup_bash/sam3_colored_map_select.sh'
+
+# TAB: ユーティリティ
+# GROUP: ユーティリティ
+
+alias install_packages='sudo apt update && sudo apt install xterm -y && \
+sudo apt install ros-jazzy-spatio-temporal-voxel-layer -y  && \
+sudo apt install ros-jazzy-rqt-tf-tree -y && \
+sudo apt install ros-jazzy-foxglove-bridge -y && \
+sudo apt-get install libqt5serialport5-dev'
+
+# Behavior Tree 可視化ツール Groot2 起動
+alias groot2='$HOME/Groot2/groot2.sh'
+
+# Behavior Tree Docker 操作
+alias bt_start='xhost +local:docker > /dev/null 2>&1 && cd ~/robotbase_ws/bt_jazzy_docker && docker compose run --rm --name bt_dev_container bt_dev'
+alias bt_enter='docker exec -it bt_dev_container bash'
+
+# SAM3 Dockerサーバー起動（ZEDなし）ポート8000
+alias sam3_docker_start='cd ~/DA3_SAM3_Project/sam3_da3_3d/sam3_server_export && docker compose up sam3-server'
+
+# SAM3 + ZED Dockerサーバー起動 ポート8080
+alias sam3_zed_docker_start='cd ~/DA3_SAM3_Project/sam3_da3_3d/sam3_server_export && docker compose up sam3-zed-merged'
+
+# PCL 3D点群物体検出ノード起動 (Velodyne等の点群をリアルタイムクラスタリング・バウンディングボックス化します)
+alias pcl_detect='bash ~/robotbase_ws/bash/startup_bash/pcl_detect.sh'
+
+# 走行軌跡可視化パスパブリッシャー
+alias odom_path='src && ros2 run sirius_navigation odom_path_publisher --ros-args -p use_sim_time:=true'
+alias odom_path_real='src && ros2 run sirius_navigation odom_path_publisher --ros-args -p use_sim_time:=false'
+
+
+# TAB: ナビゲーション
+# GROUP: ナビゲーション
+
+# Nav2起動(既存MAP)
+alias nav2='bash ~/robotbase_ws/bash/startup_bash/nav2_bringup_sim.sh'
+
+# Nav2起動（MAPなし）
+alias nav2slam='src && ros2 launch nav2_bringup bringup_launch.py \
+params_file:=${HOME}/robotbase_ws/params/nav2_params_sim_slam.yaml \
+slam:=True \
+use_composition:=False \
+use_sim_time:=true'
+
+# SLAMToolbox起動
+alias slamtoolbox='src && ros2 launch slam_toolbox online_async_launch.py \
+slam_params_file:=${HOME}/robotbase_ws/params/mapper_params_online_async_sim.yaml \
+use_sim_time:=true'
+
+# Sensor Fusion起動(シミュレーション)
+alias sf_sim='src && ros2 launch sirius_navigation sensor_fusion.launch.py use_sim_time:=true'
+alias sf='sf_sim'
+
+# 優先順位制御（twist_mux）起動
+alias twist_mux='src && ros2 launch sirius_navigation twist_mux.launch.py'
+
+# 手動操作 V2（優先順位対応版）
+alias keyop2='src && ros2 run sirius_keyop sirius_keyop_v2'
+
+# ダイナミックゴール手動操作起動
+alias keyop_goal='src && xterm -hold -T "Sirius 360°ダイナミックゴール・キーオペ" -geometry 95x25 -e ros2 run sirius_navigation keyboard_dynamic_goal'
+alias llm_goal='src && ros2 run sirius_navigation llm_dynamic_goal'
+alias status_monitor='src && ros2 run sirius_navigation status_monitor'
+alias status_monitor_win='src && xterm -hold -T "Sirius Status Monitor" -geometry 95x28 -e ros2 run sirius_navigation status_monitor'
+
+# BLE管理ノード起動
+alias sirius_ble_gateway='bash ~/robotbase_ws/bash/startup_bash/sirius_ble_gateway.sh'
+alias sirius_ble_gateway_ui='bash ~/robotbase_ws/bash/startup_bash/sirius_ble_gateway_ui.sh'
+
+# アシスト付き手動操作（Assisted Teleop）起動
+alias assisted_teleop='src && ros2 launch sirius_navigation assisted_teleop.launch.py'
+alias assisted_teleop_nav2='src && ros2 launch sirius_navigation assisted_teleop_with_nav2.launch.py'
+
+# Sensor Fusion + IMU起動(シミュレーション)
+alias sfimu_sim='src && ros2 launch sirius_navigation sensor_fusion.launch.py start_hwt905:=true use_sim_time:=true'
+alias sfimu='sfimu_sim'
+
+# TAB: Pythonスクリプト
+# GROUP: Pythonスクリプト
+# Siriusランチャー起動
+alias sirius_launcher='cd ${HOME}/robotbase_ws/other_programs/sirius_launcher && python3 sirius_launcher.py'
+
+# TAB: Sirius Ear関連
+# GROUP: Sirius Ear関連
+alias src2='cd ${HOME}/miura_ws && source install/setup.bash'
+alias blue='src2 && ros2 run bluetooth bluetooth_node'
+alias path='src2 && ros2 run path_listener path_listener_node'
+alias curve='src2 && ros2 run curvature curvature_node'
+alias curve2='src2 && ros2 run curvature_new curvature_new_node'
+alias pos='src2 && ros2 run position position_node'
+
+# TAB: リアル実験
+# GROUP: リアル実験
+
+# Nav2起動(任意MAP、実時間)
+alias nav2_real='bash ~/robotbase_ws/bash/startup_bash/nav2_bringup_real.sh'
+
+# Nav2起動(MAPなし、実時間)
+alias nav2slam_real='src && ros2 launch nav2_bringup bringup_launch.py \
+params_file:=${HOME}/robotbase_ws/params/nav2_params.yaml \
+slam:=True \
+use_composition:=False \
+use_sim_time:=false'
+
+# SLAMToolbox起動(実時間)
+alias slamtoolbox_real='src && ros2 launch slam_toolbox online_async_launch.py \
+slam_params_file:=${HOME}/robotbase_ws/params/mapper_params_online_async.yaml \
+use_sim_time:=false'
+
+# Sensor Fusion起動(実時間)
+alias sf_real='src && ros2 launch sirius_navigation sensor_fusion.launch.py use_sim_time:=false'
+
+# SAM3 ZEDカメラのトピックをROS2に流す(実時間)
+alias sam3_bridge_real='src && ros2 launch sirius_navigation sam3_bridge.launch.py use_sim_time:=false'
+
+# ウェイポイントナビゲーション起動
+alias mv_goal='bash ~/robotbase_ws/bash/startup_bash/move_goal.sh'
+
+# ターゲット検出・追従制御（対話メニュー）
+alias target_detect_and_follow='bash ~/robotbase_ws/bash/startup_bash/target_follow.sh'
+
+# ターゲット検出・追従ノード単体起動（デバッグ用）
+# alias target_detect='src && ros2 run sirius_navigation target_detector'
+# alias target_follower='src && ros2 run sirius_navigation target_follower'
+
+# ウェイポイント保存（距離）
+alias get_pos_dis='bash ~/robotbase_ws/bash/startup_bash/get_pos_dis.sh'
+
+# ウェイポイント保存（手動）
+alias get_pos_ent='bash ~/robotbase_ws/bash/startup_bash/get_pos_ent.sh'
+
+# マップ保存起動
+alias map_save='bash ~/robotbase_ws/bash/startup_bash/map_save.sh'
+
+alias rtabmap_save='bash ~/robotbase_ws/bash/startup_bash/rtabmap_save.sh'
+
+# Rviz2起動(実時間)
+alias rviz2real='src && ros2 launch sirius_description display.launch.py use_sim_time:=false'
+
+# マップ切り替え（Nav2実行中に地図を変更）
+alias change_map='bash ~/robotbase_ws/bash/startup_bash/change_map.sh'
+
+# 走行モード切り替え（安全歩行 / 通常 / パス追従）
+alias nav_safe='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh safe'
+alias nav_slow='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh slow'
+alias nav_normal='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh normal'
+alias nav_normal_active='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh normal_active'
+alias nav_strict_normal='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh strict_normal'
+alias nav_strict_safe='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh strict_safe'
+alias nav_strict_slow='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh strict_slow'
+alias nav_strict='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh strict_safe'
+alias nav_mode='bash ~/robotbase_ws/bash/startup_bash/change_nav_mode.sh'
+
+# ROS2 bag記録起動
+alias record_rosbag='bash ~/robotbase_ws/bash/startup_bash/record_rosbag.sh'
+
+# 好きなタイミングで実験メモを送信するエイリアス
+# 使い方: pub_memo "送信したい内容"
+alias pub_memo='bash ~/robotbase_ws/bash/startup_bash/pub_memo.sh'
+
+# # マップ切り替え（プログラム呼び出し用、引数に地図名を指定）
+# # 例: change_map_simple 1202-15f
+# alias change_map_simple='bash ~/robotbase_ws/bash/startup_bash/change_map_simple.sh'
+alias sam3_map_load='bash ~/robotbase_ws/bash/startup_bash/sam3_colored_map_select.sh'

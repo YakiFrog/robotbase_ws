@@ -1,0 +1,27 @@
+roboteq_ros2_driver:
+  ros__parameters:
+    pub_odom_tf: true
+    odom_frame: "sirius3/odom"
+    base_frame: "sirius3/base_footprint"
+    cmdvel_topic: "cmd_vel"
+    odom_topic: "odom"
+    port: "/dev/roboteq"
+    baud: 230400
+    open_loop: false
+    wheel_circumference: 0.825 # タイヤを紐で一周した長さ(m)
+    track_width: 0.40
+    max_amps: 12.0
+    max_rpm: 58
+    gear_ratio: 1.0  # pulseが既に車輪1回転あたりのカウント数を表す場合は1.0に設定
+    pulse: 475  # エンコーダのパルス数（車輪1回転あたり）
+    max_speed: 1.5  # m/s
+    odom_stream_interval_ms: 10
+    odom_publish_hz: 20.0
+    speed_scale: 0.52 # 速度指令のスケーリング係数: 0.50 でほぼ司令した通りの速度になる
+    # 55% はやすぎる
+    # 45% おそすぎる
+    kp_soft: 0.3  # ソフトウェアP制御用のゲイン (0.6 -> 0.3 に減衰させて急激なトルク変化を防止)
+    min_speed_threshold: 0.18  # 低速時の底上げしきい値 (0.18 * speed_scale = 0.094 m/s -> モーター出力約117となり静止摩擦を突破可能)
+
+
+    
