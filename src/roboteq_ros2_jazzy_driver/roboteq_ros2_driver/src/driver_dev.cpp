@@ -761,8 +761,10 @@ void Roboteq::odom_publish()
 
     // ソフトウェアP制御 (方法2)
     if (!open_loop && kp_soft > 0.001) {
-        float actual_rpm_r = (odom_roll_right / dt) * 60.0f;
-        float actual_rpm_l = (odom_roll_left / dt) * 60.0f;
+        // odom_roll_right/leftは前進時に正の値をとるため、
+        // モーター指令値（前進時に負）と符号を合わせるために-1を乗じる
+        float actual_rpm_r = (-odom_roll_right / dt) * 60.0f;
+        float actual_rpm_l = (-odom_roll_left / dt) * 60.0f;
         
         float error_r = right_rpm_command - actual_rpm_r;
         float error_l = left_rpm_command - actual_rpm_l;
