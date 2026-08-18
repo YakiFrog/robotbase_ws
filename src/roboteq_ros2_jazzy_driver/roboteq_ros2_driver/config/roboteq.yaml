@@ -8,8 +8,8 @@ roboteq_ros2_driver:
     port: "/dev/roboteq"
     baud: 230400
     open_loop: false
-    wheel_circumference: 0.825 # タイヤを紐で一周した長さ(m)
-    track_width: 0.40
+    wheel_circumference: 0.6283 # 車輪直径200mm -> 0.200 * pi = 0.6283m
+    track_width: 0.435          # トレッド幅435mm -> 0.435m
     max_amps: 12.0
     max_rpm: 58
     gear_ratio: 1.0  # pulseが既に車輪1回転あたりのカウント数を表す場合は1.0に設定

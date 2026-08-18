@@ -284,7 +284,9 @@ bool Roboteq::safe_serial_write(const std::string &cmd) {
 void Roboteq::cmdvel_callback(const geometry_msgs::msg::Twist::SharedPtr twist_msg)
 {
     // 車輪速度の計算 (m/s)
-    float right_speed = (twist_msg->linear.x + track_width * twist_msg->angular.z / 2.0) * -1;
+    // 右モーター(M1): 正(+)の指令で前進
+    // 左モーター(M2): 負(-)の指令で前進
+    float right_speed = (twist_msg->linear.x + track_width * twist_msg->angular.z / 2.0);
     float left_speed = (twist_msg->linear.x - track_width * twist_msg->angular.z / 2.0) * -1;
 
     linear_x = twist_msg->linear.x;
@@ -316,18 +318,18 @@ void Roboteq::cmdvel_callback(const geometry_msgs::msg::Twist::SharedPtr twist_m
         else if (max_abs_speed < EPSILON)
         {
             if (linear_x > EPSILON) {
-                right_speed = -min_threshold;
+                right_speed = min_threshold;
                 left_speed = -min_threshold;
             } else if (linear_x < -EPSILON) {
-                right_speed = min_threshold;
+                right_speed = -min_threshold;
                 left_speed = min_threshold;
             } else {
                 // 旋回指令のみの場合
                 if (angular_z > 0) {
-                    right_speed = -min_threshold;
+                    right_speed = min_threshold;
                     left_speed = min_threshold;
                 } else {
-                    right_speed = min_threshold;
+                    right_speed = -min_threshold;
                     left_speed = -min_threshold;
                 }
             }
@@ -649,7 +651,9 @@ void Roboteq::odom_loop()
                                         }
 
                                         // 累積で加算（odom_publishでリセットされる）
-                                        odom_roll_right += -1 * right_diff;
+                                        // 右エンコーダ: 前進時にカウント増加 (+1)
+                                        // 左エンコーダ: 前進時にカウント減少 (-1)
+                                        odom_roll_right += 1 * right_diff;
                                         odom_roll_left += -1 * left_diff;
 
                                         if (first_time) {
@@ -761,9 +765,10 @@ void Roboteq::odom_publish()
 
     // ソフトウェアP制御 (方法2)
     if (!open_loop && kp_soft > 0.001) {
-        // odom_roll_right/leftは前進時に正の値をとるため、
-        // モーター指令値（前進時に負）と符号を合わせるために-1を乗じる
-        float actual_rpm_r = (-odom_roll_right / dt) * 60.0f;
+        // right_rpm_commandは前進時に正(+), left_rpm_commandは前進時に負(-)
+        // odom_roll_rightは前進時に正(+), odom_roll_leftは前進時に正(+)
+        // したがって、実測モーターRPMの符号を指令値の極性に合わせる:
+        float actual_rpm_r = (odom_roll_right / dt) * 60.0f;
         float actual_rpm_l = (-odom_roll_left / dt) * 60.0f;
         
         float error_r = right_rpm_command - actual_rpm_r;

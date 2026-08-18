@@ -824,6 +824,8 @@ void ROSWitmotionSensorController::Packet(const witmotion_datapacket &packet) {
   case pidGPSCoordinates:
     gps_process(packet);
     break;
+  case pidDataPortStatus:
+    break;
   default:
     RCLCPP_INFO(rclcpp::get_logger("ROSWitmotionSensorController"),
                 "Unknown packet ID 0x%X acquired", packet.id_byte);
