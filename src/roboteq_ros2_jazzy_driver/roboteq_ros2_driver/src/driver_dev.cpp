@@ -82,6 +82,8 @@ Roboteq::Roboteq() : Node("roboteq_ros2_driver")
     speed_scale = this->declare_parameter("speed_scale", 1.0);
     kp_soft = this->declare_parameter("kp_soft", 0.0);
     min_speed_threshold = this->declare_parameter("min_speed_threshold", 0.10);
+    encoder_sign_r = this->declare_parameter("encoder_sign_r", -1.0);
+    encoder_sign_l = this->declare_parameter("encoder_sign_l", 1.0);
 
     starttime = 0;
     hstimer = 0;
@@ -176,6 +178,8 @@ void Roboteq::update_parameters()
     this->get_parameter("speed_scale", speed_scale);
     this->get_parameter("kp_soft", kp_soft);
     this->get_parameter("min_speed_threshold", min_speed_threshold);
+    this->get_parameter("encoder_sign_r", encoder_sign_r);
+    this->get_parameter("encoder_sign_l", encoder_sign_l);
     // If the stream interval changed while running, re-send the stream
     // configuration to the device so it starts using the new rate sooner.
     if (new_stream_ms != odom_stream_interval_ms) {
@@ -651,10 +655,8 @@ void Roboteq::odom_loop()
                                         }
 
                                         // 累積で加算（odom_publishでリセットされる）
-                                        // 右エンコーダ: 前進時にカウント増加 (+1)
-                                        // 左エンコーダ: 前進時にカウント減少 (-1)
-                                        odom_roll_right += 1 * right_diff;
-                                        odom_roll_left += -1 * left_diff;
+                                        odom_roll_right += (float)encoder_sign_r * right_diff;
+                                        odom_roll_left += (float)encoder_sign_l * left_diff;
 
                                         if (first_time) {
                                             odom_roll_right = 0.0;

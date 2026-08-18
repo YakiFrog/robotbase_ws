@@ -71,6 +71,14 @@
     <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
   </joint>
 
+  <!-- Velodyne frame (Velodyne 3D LiDAR用) -->
+  <link name="${prefix}velodyne"/>
+  <joint name="${prefix}lidar_link_to_velodyne" type="fixed">
+    <parent link="${prefix}lidar_link"/>
+    <child link="${prefix}velodyne"/>
+    <origin xyz="0.0 0.0 0.0" rpy="0 0 0"/>
+  </joint>
+
   <!-- ======================================== -->
   <!-- IMU Link (ロボット中心)                   -->
   <!-- ======================================== -->
