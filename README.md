@@ -8,6 +8,9 @@ SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動
 - `keyop2`: 動作確認済み
 - Nav2: RViz上でグローバルパス生成までは確認済み
 - Nav2による実機走行: 未動作。パス生成後に走り始めない
+- Gazeboシミュレータ: 構築・動作確認済み
+- シミュレータでの2D地図生成: 動作確認済み
+- シミュレータでのNav2自律移動: 動作確認済み（障害物迂回ゴール成功）
 - 原因: 実機トピックを記録していないため未確定。ただし、コード上の優先度は次のとおり
 
 1. `controller_server.use_realtime_priority: true` に対して、実機PCのRT優先度権限が未設定
@@ -18,6 +21,25 @@ SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動
 最有力は1です。現在のNav2実装では、RT権限がない状態で `use_realtime_priority: true` のままFollowPathを開始すると、速度計算スレッドが例外で終了する可能性があります。「パスは引けるが速度を出し始めない」という症状と一致します。
 
 詳細と実機での判定手順は [Nav2無走行の切り分け](DOCS/NAV2_NO_MOTION.md) を参照してください。
+
+## 実機なしのGazebo実験
+
+`robotbase_sim` パッケージに、差動二輪・Velodyne VLP-16・IMUだけを持つ簡易 Gazebo Sim 環境を追加しています。実機と同じ主要寸法と `sirius3/*` TF名を使います。
+
+```bash
+cd ~/robotbase_ws
+source install/setup.bash
+
+# SLAMで地図生成
+ros2 launch robotbase_sim mapping.launch.py
+
+# 同梱地図でNav2自律移動
+ros2 launch robotbase_sim navigation.launch.py
+```
+
+エイリアスを読み込んでいる場合は `robotbase_mapping` と `robotbase_nav` でも起動できます。GUI不要時は末尾に `gui:=false rviz:=false` を指定します。
+
+Nav2モードは実験の再現性を優先し、Gazebo真値オドメトリへ `map -> sirius3/odom` を固定する簡易ローカライゼーションです。SLAMモードでは slam_toolbox がこのTFを推定します。構成、地図保存、操作、TFの前提は [シミュレータ詳細](DOCS/SIMULATION.md) を参照してください。
 
 ## 速度指令の経路
 
@@ -110,6 +132,7 @@ Failed to make progress
 |---|---|
 | `params/` | Nav2、EKF、SLAM等の実機・シミュレーション設定 |
 | `src/sirius/` | ロボット固有のdescription、操作、navigationノード |
+| `src/robotbase_sim/` | Gazebo Sim、VLP16/IMU、SLAM、Nav2の簡易実験環境 |
 | `src/roboteq_ros2_jazzy_driver/` | モータ指令とホイールオドメトリ |
 | `src/navigation2/` | ワークスペース内でビルドするNav2本体 |
 | `src/slam_toolbox/` | 2D SLAM |
@@ -126,6 +149,7 @@ Failed to make progress
 - [構成、データフロー、SIRIUSとの差分](DOCS/ARCHITECTURE.md)
 - [Nav2無走行の原因候補と切り分け](DOCS/NAV2_NO_MOTION.md)
 - [設定の正本と既知の課題](DOCS/CONFIGURATION.md)
+- [Gazeboシミュレータの構成と使い方](DOCS/SIMULATION.md)
 
 ## ビルド
 

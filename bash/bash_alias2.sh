@@ -30,6 +30,11 @@ alias imu='src && ros2 launch sirius_navigation witmotion_hwt905.launch.py'
 # Simulation起動
 alias sim='src && ros2 launch sirius_description sim_with_ui.launch.py'
 
+# Robotbase Gazebo Sim（実機不要、VLP16 + IMU）
+alias robotbase_sim='src && ros2 launch robotbase_sim sim.launch.py'
+alias robotbase_mapping='src && ros2 launch robotbase_sim mapping.launch.py'
+alias robotbase_nav='src && ros2 launch robotbase_sim navigation.launch.py'
+
 # Unity ROS-TCP Endpoint起動
 alias rte='bash ~/robotbase_ws/bash/startup_bash/start_ros_tcp.sh'
 

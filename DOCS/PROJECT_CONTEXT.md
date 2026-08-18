@@ -14,8 +14,13 @@
 - `keyop2`: 成功
 - Nav2グローバルパス生成: 成功
 - Nav2実走行: 未成功。経路表示後に動き始めない
+- Gazebo Sim: `src/robotbase_sim/` に構築済み
+- シミュレーションSLAM: `/scan`から地図生成を確認済み
+- シミュレーションNav2: `(0, 0)`から壁を迂回して`(4, 0)`へ到達、結果`SUCCEEDED`
 - 実機ログ・rosbag: このチェックアウトにはなし
 - 原因: 未確定。最優先でRT権限と速度トピック境界を確認する
+
+実機Nav2の未解決状態と、シミュレーションNav2の成功は別の結果である。シミュレータではRT優先度を無効化し、Gazebo真値オドメトリを使っている。
 
 ## ロボット固有値
 
@@ -79,3 +84,4 @@
 - 実機問題は `/cmd_vel_nav` から順に境界観測する
 - `src/navigation2/` は上流コードを含むため、該当シンボルが分かるまで全体探索しない
 - ロボット固有変更は原則 `params/`、`src/sirius/`、`src/roboteq_ros2_jazzy_driver/`、`bash/` を先に見る
+- シミュレータ問題は最初に `DOCS/SIMULATION.md` と `src/robotbase_sim/` だけを見る

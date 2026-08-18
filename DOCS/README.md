@@ -8,6 +8,7 @@
 2. [NAV2_NO_MOTION.md](NAV2_NO_MOTION.md) — 2026-08-19のNav2無走行を切り分ける
 3. [ARCHITECTURE.md](ARCHITECTURE.md) — ノード、トピック、SIRIUSとの差分を理解する
 4. [CONFIGURATION.md](CONFIGURATION.md) — 設定の正本と既知の不整合を確認する
+5. [SIMULATION.md](SIMULATION.md) — 実機なしで地図生成・Nav2走行を試す
 
 ## AIへ調査を依頼するとき
 
