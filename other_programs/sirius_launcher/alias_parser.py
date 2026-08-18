@@ -4,6 +4,7 @@ bash_alias2ファイルのパーサー
 """
 
 import re
+from pathlib import Path
 
 
 def parse_bash_aliases(alias_file_path):
@@ -75,7 +76,7 @@ def parse_bash_aliases(alias_file_path):
                     
                     # src && を実際のコマンドに展開
                     if command.startswith('src && '):
-                        ws_dir = Path(filepath).resolve().parent.parent
+                        ws_dir = Path(alias_file_path).resolve().parent.parent
                         setup_bash = ws_dir / "install" / "setup.bash"
                         command = command.replace('src && ', 
                             f'cd {ws_dir} && source {setup_bash} && ')
