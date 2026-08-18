@@ -2,6 +2,8 @@
 amcl:
   ros__parameters:
     use_sim_time: false
+    set_initial_pose: true
+    initial_pose: [0.0, 0.0, 0.0, 0.0]
 
     # 自己位置ぶっとびやすいのは、ここの値。シミュレータ上のオドメトリはずれやすい
     # 点群と環境情報が一致していないときは、ここの値を高くする（LiDARの信頼度を上げる）ことで、ビッタリ合うはず。
@@ -92,7 +94,7 @@ global_costmap:
       publish_frequency: 1.0
       global_frame: map # ✅ 長距離・経路計画用
       robot_base_frame: sirius3/base_footprint
-      footprint: "[ [0.50, 0.35], [0.50, -0.35], [-0.70, -0.35], [-0.70, 0.35] ]" # ロボットの形状 (10cmマージン, 横は5cmマージン)
+      footprint: "[ [0.40, 0.28], [0.40, -0.28], [-0.45, -0.28], [-0.45, 0.28] ]" # 実機サイズ（自己点群の干渉を防ぐ）
       resolution: 0.05 # 0.05 -> 0.10 (軽量化のため)
       rolling_window: true
       width: 50
@@ -106,7 +108,7 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan #sam3_cloud
+        observation_sources: scan
         scan:
           topic: /scan3
           max_obstacle_height: 2.0
@@ -117,7 +119,7 @@ global_costmap:
           raytrace_min_range: 0.0
           obstacle_max_range: 18.0
           obstacle_min_range: 0.0
-          expected_update_rate: 1.0
+          expected_update_rate: 0.0
           observation_persistence: 0.0
         sam3_cloud:
           topic: /sam3/obstacles
@@ -180,10 +182,10 @@ local_costmap:
       width: 6
       height: 6
       resolution: 0.05
-      # footprint: "[ [0.30, 0.30], [0.30, -0.30], [-0.50, -0.30], [-0.50, 0.30] ]" # ロボットの形状（ぴったりサイズ）
-      footprint: "[ [0.50, 0.30], [0.50, -0.30], [-0.70, -0.30], [-0.70, 0.30] ]" # ロボットの形状 (10cmマージン, 横は5cmマージン) これをでかくしすぎるとパスが引けなくなる
-      plugins: ["stvl_layer", "obstacle_layer", "inflation_layer"]
-      # filters: ["keepout_filter"]
+      footprint: "[ [0.40, 0.28], [0.40, -0.28], [-0.45, -0.28], [-0.45, 0.28] ]" # 実機サイズ（自己点群の干渉を防ぐ）
+      plugins: ["obstacle_layer", "inflation_layer"]
+      # stvl_layer は一旦無効化（自己点群による全領域Lethalコスト問題を調査中）
+      # plugins: ["stvl_layer", "obstacle_layer", "inflation_layer"]
       track_unknown_space: false # falseにすることで、UNKNOWN領域を通過可能として扱う
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
@@ -212,18 +214,17 @@ local_costmap:
             topic: /velodyne_points
             marking: true
             clearing: true             # 両方有効にする[web:22]
-            obstacle_range: 8.0       # VLP16の有効範囲（屋外なら10-15m）[web:22][web:31]
-            min_obstacle_height: 0.3   # 地面ノイズ除去（ロボット高さに応じて調整）[web:22][web:25]
-            max_obstacle_height: 1.3   # 天井や高い物体を無視[web:22]
-            min_z: 0.1                 # クリアリング用最小高さ[web:22]
-            max_z: 2.0                 # クリアリング用最大高さ[web:22]
+            obstacle_range: 8.0       # VLP16の有効範囲（屋外なら10-15m）
+            min_obstacle_height: 0.2   # 地面ノイズ除去（低くして遠くの障害物を検出）
+            max_obstacle_height: 2.5   # 高い物体も検出
+            min_z: 0.2                 # クリアリング用最小高さ
+            max_z: 2.5                 # クリアリング用最大高さ
             vertical_fov_angle: 0.523  # VLP16の垂直FOV（約30度=0.523rad）[web:22]
             horizontal_fov_angle: 6.28 # 360度（2π）[web:22]
             decay_acceleration: 0.0    # LiDARは必ず0に設定[web:22]
             model_type: 1              # 3D LiDARは1を指定[web:22]
-            # Measured velodyne publish ~20-25Hz on the robot — set expected to 0.05s (20Hz)
-            expected_update_rate: 1.0  # 0=更新レートチェックなし[web:22]
-            observation_persistence: 1.0 # 0=最新の測定値のみ使用[web:22]
+            expected_update_rate: 0.0  # 0=更新レートチェックなし（バッファ遅延ワーニングを防止）
+            observation_persistence: 0.0 # 0=最新の測定値のみ使用
             inf_is_valid: false
             filter: "voxel"            # CPU負荷が高い場合は"passthrough"に変更[web:22]
             voxel_min_points: 0        # フィルタの最小点数[web:22]
@@ -232,9 +233,9 @@ local_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan #sam3_cloud
+        observation_sources: scan
         scan:
-          topic: /hokuyo_scan
+          topic: /scan3
           max_obstacle_height: 2.0
           clearing: True
           marking: True
@@ -242,22 +243,11 @@ local_costmap:
           raytrace_max_range: 15.0
           raytrace_min_range: 0.0
           obstacle_max_range: 10.0
-          obstacle_min_range: 0.0
-        sam3_cloud:
-          topic: /sam3/obstacles
-          max_obstacle_height: 2.0
-          min_obstacle_height: 0.0
-          clearing: true
-          marking: true
-          data_type: "PointCloud2"
-          obstacle_max_range: 5.0
-          obstacle_min_range: 0.0
-          expected_update_rate: 1.0
-          observation_persistence: 0.0
+          obstacle_min_range: 0.6  # ロボット自機サイズ（0.45m+余裕）以内の点を無視
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 10.0 # コストの減少率(小さいほど急激に減少。ロボットが近づけない距離が広がる)
-        inflation_radius: 0.70 # ロボットが近づけない距離
+        cost_scaling_factor: 10.0
+        inflation_radius: 0.60 # 外接円半径(0.544m)以上にする必要あり（MPPIコスト計算要件）
       keepout_filter:
         plugin: "nav2_costmap_2d::KeepoutFilter"
         enabled: False  # True -> False (フィルター情報がない場合は無効化)
@@ -269,12 +259,12 @@ controller_server:
   ros__parameters:
     use_sim_time: false
     controller_frequency: 10.0 # 20.0 -> 15.0 -> 10.0 制御ループの周波数（高いほど応答性良・負荷大）15Hzで文句言われた
-    costmap_update_timeout: 0.50  # 0.30 -> 1.0 (タイムアウトを延長)
+    costmap_update_timeout: 1.00  # 0.30 -> 1.0 (タイムアウトを延長)
     action_server_result_timeout: 10.0  # アクションサーバーの結果待ち時間
     min_x_velocity_threshold: 0.05 # 速度司令の切り捨て。切り上げではない。
     min_y_velocity_threshold: 0.0
     min_theta_velocity_threshold: 0.05
-    failure_tolerance: 0.5
+    failure_tolerance: 1.0
     progress_checker_plugins: ["progress_checker"]
     goal_checker_plugins: ["general_goal_checker"]
     controller_plugins: ["FollowPath"]
@@ -292,9 +282,9 @@ controller_server:
       yaw_goal_tolerance: 0.50
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 60  # 80 -> 60 60*0.1 = 6.0秒先まで予測 -> 40
-      model_dt: 0.10 # 0.05→0.07,  1/20 = 0.05, 1/15 = 0.06666...  制御周期に合わせる
-      batch_size: 2000  
+      time_steps: 40  # 40*0.1 = 4.0秒先まで予測（CPU負荷低減）
+      model_dt: 0.10 # 制御周期に合わせる (10Hz)
+      batch_size: 600  # CPU実機向け軽量化（2000 -> 600: 演算遅延によるタイムアウトを解消）
 
       # 【速度と加速度の物理的チューニング指針】
       # 1. 安全制動距離の公式: d = v^2 / (2 * a)
@@ -330,8 +320,7 @@ controller_server:
 
       iteration_count: 1
       prune_distance: 6.0 # より遠くまで軌道を維持
-      # 遠いパス上の点を無視するためのパラメタ
-      transform_tolerance: 0.1
+      transform_tolerance: 0.5 # TF許容遅延を延長（0.1 -> 0.5s）
       temperature: 0.30 # 軌道選択のランダム性
       gamma: 0.050 # 減衰率(未来のコストをどれだけ重視するか)
       motion_model: "DiffDrive"
@@ -393,7 +382,7 @@ controller_server:
         # ↑この値以上のコストになると警戒モード
         critical_cost: 250.0           # 危険レベルのコスト閾値　300 -> 250 危険判定を厳しく
         # ↑この値以上になると強いペナルティ
-        consider_footprint: true      # フットプリント全体で評価するか（false=中心点のみ） これでフットプリントが干渉しているとき動かない
+        consider_footprint: false      # フットプリント評価（false=中心点・衝突耐性重視。機体自己点群による立ち往生を防止）
         collision_cost: 1000000.0      # 衝突時の高ペナルティ（実質的に選択されない）
         near_goal_distance: 1.0        # ゴール付近[m]での評価調整
         trajectory_point_step: 1       # 軌道上の評価点間隔（大きいほど高速・粗い） 2 -> 1 
@@ -655,3 +644,64 @@ loopback_simulator:
 # map_server:
 #   ros__parameters:
 #     yaml_filename: ""
+
+slam_toolbox:
+  ros__parameters:
+    solver_plugin: solver_plugins::CeresSolver
+    ceres_linear_solver: SPARSE_NORMAL_CHOLESKY
+    ceres_preconditioner: SCHUR_JACOBI
+    ceres_trust_strategy: LEVENBERG_MARQUARDT
+    ceres_dogleg_type: TRADITIONAL_DOGLEG
+    ceres_loss_function: None
+
+    odom_frame: sirius3/odom
+    map_frame: map
+    base_frame: sirius3/base_footprint
+    scan_topic: /scan3
+    use_map_saver: true
+    mode: mapping
+
+    debug_logging: false
+    throttle_scans: 0
+    transform_publish_period: 0.02
+    map_update_interval: 3.0
+    resolution: 0.05
+    min_laser_range: 0.35
+    max_laser_range: 100.0
+    minimum_time_interval: 0.10
+    transform_timeout: 0.5
+    tf_buffer_duration: 30.0
+    stack_size_to_use: 100000000
+    enable_interactive_mode: true
+
+    use_scan_matching: true
+    use_scan_barycenter: true
+    minimum_travel_distance: 0.3
+    minimum_travel_heading: 0.3
+    scan_buffer_size: 10
+    scan_buffer_maximum_scan_distance: 20.0
+    link_match_minimum_response_fine: 0.1
+    link_scan_maximum_distance: 1.5
+    loop_search_maximum_distance: 3.0
+    do_loop_closing: true
+    loop_match_minimum_chain_size: 10
+    loop_match_maximum_variance_coarse: 3.0
+    loop_match_minimum_response_coarse: 0.35
+    loop_match_minimum_response_fine: 0.45
+
+    correlation_search_space_dimension: 0.5
+    correlation_search_space_resolution: 0.01
+    correlation_search_space_smear_deviation: 0.1
+
+    loop_search_space_dimension: 8.0
+    loop_search_space_resolution: 0.05
+    loop_search_space_smear_deviation: 0.03
+
+    distance_variance_penalty: 0.5
+    angle_variance_penalty: 1.0
+    fine_search_angle_offset: 0.00349
+    coarse_search_angle_offset: 0.349
+    coarse_angle_resolution: 0.0349
+    minimum_angle_penalty: 0.9
+    minimum_distance_penalty: 0.5
+    use_response_expansion: true

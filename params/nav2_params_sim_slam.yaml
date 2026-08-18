@@ -269,7 +269,7 @@ local_costmap:
         enabled: True
         observation_sources: scan
         scan:
-          topic: /hokuyo_scan
+          topic: /scan3
           max_obstacle_height: 2.0
           clearing: True
           marking: True

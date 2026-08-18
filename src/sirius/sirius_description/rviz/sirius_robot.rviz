@@ -6,10 +6,8 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /TF1
         - /TF1/Frames1/sirius3/base_link1
         - /TF1/Frames1/sirius3/base_footprint1
-        - /scan1
         - /velodyne_points1/Status1
         - /Amcl Particle Swarm1/Topic1
         - /Controller1/Local Costmap1/Position1
@@ -216,7 +214,7 @@ Visualization Manager:
       Color: 255; 255; 255
       Color Transformer: FlatColor
       Decay Time: 0
-      Enabled: true
+      Enabled: false
       Invert Rainbow: false
       Max Color: 255; 255; 255
       Max Intensity: -999999
@@ -237,7 +235,7 @@ Visualization Manager:
         Value: /hokuyo_scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -253,7 +251,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 145
+      Max Intensity: 151
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: velodyne_points
@@ -329,7 +327,8 @@ Visualization Manager:
             Value: /global_costmap/costmap
           Update Topic:
             Depth: 5
-            Durability Policy: Volatile
+            Durability Policy: Transient Local
+            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /global_costmap/costmap_updates
@@ -397,7 +396,8 @@ Visualization Manager:
             Value: /local_costmap/costmap
           Update Topic:
             Depth: 5
-            Durability Policy: Volatile
+            Durability Policy: Transient Local
+            Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
             Value: /local_costmap/costmap_updates
@@ -1040,7 +1040,7 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Scale: 37.43793869018555
+      Scale: 68.54048156738281
       Target Frame: map
       Value: TopDownOrtho (rviz_default_plugins)
       X: 0.6320083737373352
