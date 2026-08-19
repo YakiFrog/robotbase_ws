@@ -92,7 +92,9 @@ Nav2 JazzyのObstacleLayerは、plugin全体とは別に観測source `scan.max_o
 
 MPPIの予測時間は2.8秒とする。基準速度0.6 m/sでの予測移動量は1.68 mで、半径3 mのlocal costmap内に車体外形まで収まる。旧6秒・0.9 m/s設定は5.4 m先まで予測しようとしてcostmap外へ達し、空き領域で低速周回する原因になっていた。
 
-MPPIには固定の巡航速度パラメータがないため、`vx_max`とvelocity smootherの前進上限を`0.60 m/s`にして、これを運用上の基準速度とする。直線で低速へ偏らないよう、候補軌道の分布を`vx_std: 0.30`、操作量ペナルティをNav2標準の`gamma: 0.015`とした。さらに`PathFollowCritic`を`cost_weight: 12.0`、`offset_from_furthest: 11`とし、0.05 m間隔の経路で約0.55 m先への進行を評価する。障害物衝突判定、footprint、inflation設定は変更しない。
+MPPIには固定の巡航速度パラメータがないため、`vx_max`とvelocity smootherの前進上限を`0.60 m/s`にして、これを運用上の基準速度とする。`PathFollowCritic`を`cost_weight: 12.0`、`offset_from_furthest: 11`とし、0.05 m間隔の経路で約0.55 m先への進行を評価する。障害物衝突判定、footprint、inflation設定は変更しない。
+
+実機は速度の周期的な脈動を抑えるため、探索分散を`vx_std: 0.25`、滑らかさとのトレードオフを`gamma: 0.050`、前進加速度上限をMPPI・velocity smootherとも`0.60 m/s^2`とする。さらに`visualize: false`と`regenerate_noises: false`で、候補軌道描画の負荷と毎周期のnoise再生成による計算揺れを除く。シミュレーションでは可視化・調整を優先するため、これらは従来値のままとする。
 
 `PreferForwardCritic.cost_weight: 40.0`で、通常走行では後退より向き直って前進する軌道を強く優先する。`vx_min: -0.30`は維持しているため、前進軌道が成立しない場合やRecoveryのbackupでは後退できる。シミュレーションの後方ゴール試験で最大後退を約`-0.027 m/s`まで抑えた。
 
@@ -132,16 +134,16 @@ Nav2とtwist_muxは別コマンドである。実機Nav2試験では `koko_twist
 
 ### 実機の指令速度校正
 
-Roboteqの`speed_scale`は[実機用Roboteq設定](../params/real/roboteq.yaml)にあり、現在値は`0.52`である。この値は`/cmd_vel`から左右モータ指令を作る際だけに乗り、encoderから`/odom`を計算する側には乗らない。実距離とodom距離が一致しているのに定常走行中のodom速度だけが指令より低い場合は、次式を目安に調整する。
+Roboteqの`speed_scale`は[実機用Roboteq設定](../params/real/roboteq.yaml)にあり、現在の作業値は`0.70`である。この値は`/cmd_vel`から左右モータ指令を作る際だけに乗り、encoderから`/odom`を計算する側には乗らない。実距離とodom距離が一致しているのに定常走行中のodom速度だけが指令より低い場合は、次式を目安に調整する。
 
 ```text
 new_speed_scale = current_speed_scale * command_speed / steady_odom_speed
 ```
 
-例として`0.50 m/s`指令に対して定常odomが`0.47 m/s`なら、`0.52 * 0.50 / 0.47 = 0.553`が計算値になる。一度に大きく変えず、まず`0.01--0.02`刻みで試す。driverはパラメータを1秒ごとに再取得するため、一時試験はビルドも再起動も不要である。
+例として`0.50 m/s`指令に対して定常odomが`0.47 m/s`なら、`0.70 * 0.50 / 0.47 = 0.745`が計算値になる。一度に大きく変えず、まず`0.01--0.02`刻みで試す。driverはパラメータを1秒ごとに再取得するため、一時試験はビルドも再起動も不要である。
 
 ```bash
-ros2 param set /roboteq_ros2_driver speed_scale 0.54
+ros2 param set /roboteq_ros2_driver speed_scale 0.72
 ```
 
 次回起動にも残す場合は`params/real/roboteq.yaml`の`speed_scale`を同じ値へ変更する。YAMLだけの変更なのでビルドは不要だが、既に起動中のdriverへYAML変更だけを反映するには再起動が必要である。なお、床上の実距離とodom距離自体が一致しない場合は`speed_scale`ではなく、`wheel_circumference`、`pulse`、`gear_ratio`を先に校正する。

@@ -110,11 +110,12 @@ controller_server:
       vy_min: 0.0
       wz_max: 0.90
       wz_min: -0.90
-      # 0.60 m/s付近までの候補軌道を十分に生成する。
-      vx_std: 0.30
+      # 実機では探索ノイズを抑え、周期的な前後加速を減らす。
+      vx_std: 0.25
       vy_std: 0.0
       wz_std: 0.30
-      ax_max: 0.90
+      # 0.60 m/sへ約1秒で到達させ、急な加速の繰り返しを抑える。
+      ax_max: 0.60
       ax_min: -0.90
       ay_max: 0.0
       ay_min: 0.0
@@ -124,11 +125,13 @@ controller_server:
       prune_distance: 3.0
       transform_tolerance: 0.10
       temperature: 0.30
-      # 操作量を抑えるコスト。Nav2標準値へ戻し、加速を過度に抑えない。
-      gamma: 0.015
+      # 操作列の滑らかさを優先する。速度上限は別のvx_maxで0.60 m/sを維持する。
+      gamma: 0.050
       motion_model: DiffDrive
-      visualize: true
-      regenerate_noises: true
+      # 実機では候補軌道描画を止め、controller周期の計算負荷を安定させる。
+      visualize: false
+      # 毎周期の乱数再生成を止め、サンプリングによる出力の揺れとCPU wake-upを減らす。
+      regenerate_noises: false
       TrajectoryVisualizer:
         trajectory_step: 5
         time_step: 3
@@ -283,7 +286,7 @@ velocity_smoother:
     feedback: OPEN_LOOP
     max_velocity: [0.60, 0.0, 0.90]
     min_velocity: [-0.30, 0.0, -0.90]
-    max_accel: [0.90, 0.0, 1.50]
+    max_accel: [0.60, 0.0, 1.50]
     max_decel: [-0.90, 0.0, -1.50]
     odom_topic: /odom/filtered
     odom_duration: 0.3

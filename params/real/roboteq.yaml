@@ -18,7 +18,7 @@ roboteq_ros2_driver:
     max_speed: 1.5
     odom_stream_interval_ms: 10
     odom_publish_hz: 50.0
-    speed_scale: 0.80
+    speed_scale: 0.70
     kp_soft: 0.3
     min_speed_threshold: 0.18
     encoder_sign_r: -1.0
