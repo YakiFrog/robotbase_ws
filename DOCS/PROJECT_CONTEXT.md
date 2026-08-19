@@ -13,7 +13,7 @@
 - 旧設定の最有力原因: `use_realtime_priority: true` と実機OS権限
 - 新Nav2: 専用最小設定へ置換し `use_realtime_priority: false`、実機再試験待ち
 - Gazebo SLAM: 動作確認済み
-- Gazebo Nav2: 新しい共通params、分離launch、`robot/*` TFで `(4, 0)` 到達、`SUCCEEDED`
+- Gazebo Nav2: `params/sim/`、分離launch、`robot/*` TFで `(4, 0)` 到達、`SUCCEEDED`
 - 実機ログ/rosbag: このチェックアウトにはなし
 
 ## 正本
@@ -108,3 +108,5 @@ ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
 - 外部連携タブ
 
 上流または移植元ソースが `src/sirius/` に残っていても、新しいbringupから参照しない。
+
+`src/sirius/` は `COLCON_IGNORE` によりビルド対象外。実機PCへのclone、依存導入、udev、VLP-16 NIC、段階試験は `DOCS/REAL_PC_MIGRATION.md` を正本とする。

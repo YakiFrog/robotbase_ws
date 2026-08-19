@@ -23,13 +23,18 @@ def generate_launch_description():
     world = os.path.join(pkg_share, 'worlds', 'test_arena.sdf')
     model = os.path.join(pkg_share, 'models', 'robotbase.sdf')
     urdf = os.path.join(bringup_share, 'urdf', 'robotbase.urdf')
-    mux_config = os.path.join(bringup_share, 'config', 'twist_mux.yaml')
+    params_root = os.environ.get(
+        'ROBOTBASE_PARAMS_DIR',
+        os.path.join(os.path.expanduser('~'), 'robotbase_ws', 'params'))
 
     with open(urdf, 'r', encoding='utf-8') as urdf_file:
         robot_description = urdf_file.read()
 
     gui = LaunchConfiguration('gui')
     tf_prefix = LaunchConfiguration('tf_prefix')
+    twist_mux_params_file = LaunchConfiguration('twist_mux_params_file')
+    laserscan_params_file = LaunchConfiguration('laserscan_params_file')
+    idle_twist_params_file = LaunchConfiguration('idle_twist_params_file')
     frame_prefix = PythonExpression(["'", tf_prefix, "/'"])
     base_partition = os.environ.get('GZ_PARTITION', 'koko')
     session_partition = f'{base_partition}_sim_{os.getpid()}'
@@ -117,12 +122,7 @@ def generate_launch_description():
         executable='velodyne_laserscan_node',
         name='vlp16_to_scan',
         output='screen',
-        parameters=[{
-            'use_sim_time': True,
-            'ring': 8,
-            'resolution': 0.008726646,
-            'use_multi_rings': False,
-        }],
+        parameters=[laserscan_params_file],
         remappings=[
             ('velodyne_points', '/velodyne_points'),
             ('scan', '/scan'),
@@ -134,7 +134,7 @@ def generate_launch_description():
         executable='twist_mux',
         name='twist_mux',
         output='screen',
-        parameters=[mux_config],
+        parameters=[twist_mux_params_file],
         remappings=[('cmd_vel_out', '/cmd_vel')],
     )
 
@@ -143,7 +143,7 @@ def generate_launch_description():
         executable='idle_twist_publisher.py',
         name='idle_twist_publisher',
         output='screen',
-        parameters=[{'use_sim_time': True, 'publish_rate': 10.0}],
+        parameters=[idle_twist_params_file],
     )
 
     return LaunchDescription([
@@ -153,6 +153,15 @@ def generate_launch_description():
             'gui', default_value='true',
             description='Start the Gazebo GUI. Set false for a headless run.'),
         DeclareLaunchArgument('tf_prefix', default_value='robot'),
+        DeclareLaunchArgument(
+            'twist_mux_params_file',
+            default_value=os.path.join(params_root, 'sim', 'twist_mux.yaml')),
+        DeclareLaunchArgument(
+            'laserscan_params_file',
+            default_value=os.path.join(params_root, 'sim', 'velodyne_laserscan.yaml')),
+        DeclareLaunchArgument(
+            'idle_twist_params_file',
+            default_value=os.path.join(params_root, 'sim', 'idle_twist.yaml')),
         gazebo_gui,
         gazebo_headless,
         robot_state_publisher,

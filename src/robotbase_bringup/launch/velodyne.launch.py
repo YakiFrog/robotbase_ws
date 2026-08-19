@@ -3,36 +3,27 @@
 import os
 import yaml
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import ComposableNodeContainer
 from launch_ros.descriptions import ComposableNode
 
 
-def generate_launch_description():
-    driver_share = get_package_share_directory('velodyne_driver')
-    pointcloud_share = get_package_share_directory('velodyne_pointcloud')
-    laserscan_share = get_package_share_directory('velodyne_laserscan')
+def _launch_setup(context):
+    params_file = LaunchConfiguration('params_file').perform(context)
+    calibration_file = LaunchConfiguration('calibration_file').perform(context)
+    tf_prefix = LaunchConfiguration('tf_prefix').perform(context).strip('/')
 
-    with open(os.path.join(
-            driver_share, 'config', 'VLP16-velodyne_driver_node-params.yaml'),
-            encoding='utf-8') as config_file:
-        driver_params = yaml.safe_load(config_file)['velodyne_driver_node']['ros__parameters']
-    with open(os.path.join(
-            pointcloud_share, 'config', 'VLP16-velodyne_transform_node-params.yaml'),
-            encoding='utf-8') as config_file:
-        pointcloud_params = yaml.safe_load(config_file)['velodyne_transform_node']['ros__parameters']
-    with open(os.path.join(
-            laserscan_share, 'config', 'default-velodyne_laserscan_node-params.yaml'),
-            encoding='utf-8') as config_file:
-        laserscan_params = yaml.safe_load(config_file)['velodyne_laserscan_node']['ros__parameters']
+    with open(params_file, encoding='utf-8') as config_file:
+        config = yaml.safe_load(config_file)
 
-    tf_prefix = LaunchConfiguration('tf_prefix')
-    driver_params['frame_id'] = PathJoinSubstitution([tf_prefix, 'lidar_link'])
-    pointcloud_params['calibration'] = os.path.join(
-        pointcloud_share, 'params', 'VLP16db.yaml')
+    driver_params = dict(config['velodyne_driver_node']['ros__parameters'])
+    pointcloud_params = dict(config['velodyne_transform_node']['ros__parameters'])
+    laserscan_params = dict(config['velodyne_laserscan_node']['ros__parameters'])
+    driver_params['frame_id'] = (
+        f'{tf_prefix}/lidar_link' if tf_prefix else 'lidar_link')
+    pointcloud_params['calibration'] = calibration_file
 
     container = ComposableNodeContainer(
         name='velodyne_container', namespace='', package='rclcpp_components',
@@ -50,7 +41,20 @@ def generate_launch_description():
         ],
     )
 
+    return [container]
+
+
+def generate_launch_description():
+    params_root = os.environ.get(
+        'ROBOTBASE_PARAMS_DIR',
+        os.path.join(os.path.expanduser('~'), 'robotbase_ws', 'params'))
     return LaunchDescription([
         DeclareLaunchArgument('tf_prefix', default_value='robot'),
-        container,
+        DeclareLaunchArgument(
+            'params_file',
+            default_value=os.path.join(params_root, 'real', 'velodyne.yaml')),
+        DeclareLaunchArgument(
+            'calibration_file',
+            default_value=os.path.join(params_root, 'real', 'VLP16db.yaml')),
+        OpaqueFunction(function=_launch_setup),
     ])

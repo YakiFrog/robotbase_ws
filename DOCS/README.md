@@ -5,11 +5,12 @@
 ## 推奨する読み順
 
 1. [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md) — 現状を短時間で把握する
-2. [NAV2_NO_MOTION.md](NAV2_NO_MOTION.md) — 2026-08-19のNav2無走行を切り分ける
-3. [ARCHITECTURE.md](ARCHITECTURE.md) — ノード、トピック、SIRIUSとの差分を理解する
-4. [CONFIGURATION.md](CONFIGURATION.md) — 設定の正本と既知の不整合を確認する
-5. [SIMULATION.md](SIMULATION.md) — 実機なしで地図生成・Nav2走行を試す
-6. [LAUNCHER.md](LAUNCHER.md) — ココちゃん用Bash、UI、SIRIUSとの分離設定
+2. [REAL_PC_MIGRATION.md](REAL_PC_MIGRATION.md) — 実機PCへ移行し段階試験する
+3. [NAV2_NO_MOTION.md](NAV2_NO_MOTION.md) — 2026-08-19のNav2無走行を切り分ける
+4. [ARCHITECTURE.md](ARCHITECTURE.md) — ノード、トピック、SIRIUSとの差分を理解する
+5. [CONFIGURATION.md](CONFIGURATION.md) — 設定の正本と既知の不整合を確認する
+6. [SIMULATION.md](SIMULATION.md) — 実機なしで地図生成・Nav2走行を試す
+7. [LAUNCHER.md](LAUNCHER.md) — ココちゃん用Bash、UI、SIRIUSとの分離設定
 
 ## AIへ調査を依頼するとき
 

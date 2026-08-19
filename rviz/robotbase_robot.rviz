@@ -68,7 +68,7 @@ Visualization Manager:
         History Policy: Keep Last
         Reliability Policy: Reliable
         Value: /robot_description
-      TF Prefix: TF_PREFIX
+      TF Prefix: robot
       Update Interval: 0
       Value: true
       Visual Enabled: true
@@ -196,7 +196,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: TF_PREFIX/odom
+    Fixed Frame: robot/odom
     Frame Rate: 30
   Name: root
   Tools:
@@ -235,7 +235,7 @@ Visualization Manager:
       Class: rviz_default_plugins/TopDownOrtho
       Name: Current View
       Scale: 70
-      Target Frame: TF_PREFIX/odom
+      Target Frame: robot/odom
       Value: TopDownOrtho (rviz_default_plugins)
       X: 0
       Y: 0

@@ -2,21 +2,25 @@
 
 ## 正本一覧
 
-現在使うロボット固有設定は `src/robotbase_bringup/` に集約した。ルート `params/` にあったSIRIUS由来のNav2/SLAM/EKF複製は削除済み。
+現在使うロボット固有パラメータは、プロジェクト直下の `params/` に集約した。上流パッケージの `src/navigation2/`、`src/slam_toolbox/`、`src/velodyne/` にある既定ファイルは編集しない。
 
 | 対象 | 正本 |
 |---|---|
 | 機体表示名・ROS/Gazebo分離・TF接頭辞 | `robot.env` |
 | URDF | `src/robotbase_bringup/urdf/robotbase.urdf` |
 | RViz | `src/robotbase_bringup/rviz/robotbase.rviz` |
-| Nav2（実機/シミュ共通） | `src/robotbase_bringup/config/nav2.yaml` |
-| SLAM Toolbox（実機/シミュ共通） | `src/robotbase_bringup/config/slam_toolbox.yaml` |
-| EKF | `src/robotbase_bringup/config/ekf.yaml` |
-| Roboteq | `src/robotbase_bringup/config/roboteq.yaml` |
-| IMU | `src/robotbase_bringup/config/imu.yaml` |
-| twist_mux | `src/robotbase_bringup/config/twist_mux.yaml` |
+| Nav2（実機） | `params/real/nav2.yaml` |
+| Nav2（シミュレーション） | `params/sim/nav2.yaml` |
+| SLAM Toolbox（実機 / シミュ） | `params/real/slam_toolbox.yaml` / `params/sim/slam_toolbox.yaml` |
+| twist_mux（実機 / シミュ） | `params/real/twist_mux.yaml` / `params/sim/twist_mux.yaml` |
+| EKF・Roboteq・IMU | `params/real/ekf.yaml`、`roboteq.yaml`、`imu.yaml` |
+| Velodyne VLP-16 | `params/real/velodyne.yaml`、`VLP16db.yaml` |
+| シミュレーション点群変換・停止速度 | `params/sim/velodyne_laserscan.yaml`、`idle_twist.yaml` |
+| キーボード手動操作（共通） | `params/common/keyop.yaml` |
 | Gazeboモデル | `src/robotbase_sim/models/robotbase.sdf` |
 | 実機Nav2地図選択 | `bash/startup_bash/nav2_bringup_real.sh` |
+
+RVizの配布用テンプレート `src/robotbase_bringup/rviz/robotbase.rviz` にはNav2標準のNavigation 2パネル、Global/Local Costmap、Global/Local Plan、Local Footprint表示を登録している。通常起動ではTF接頭辞ごとの `rviz/robotbase_<prefix>.rviz` を使い、RVizの通常のSave Configを次回起動へ引き継ぐ。
 
 ## 機体識別とTF
 
@@ -29,6 +33,8 @@ ROBOTBASE_ROS_DOMAIN_ID="57"
 ROBOTBASE_GZ_PARTITION="koko"
 ROBOTBASE_TF_PREFIX="robot"
 ```
+
+alias経由では `ROBOTBASE_PARAMS_DIR=~/robotbase_ws/params` も設定される。直接launchした場合も同じ場所を既定値として使う。
 
 表示名とTF接頭辞は独立している。TFは既定で次の構造になる。
 
@@ -45,7 +51,7 @@ map
 
 ## Nav2
 
-実機とシミュレータは同じ `nav2.yaml` を使い、launch引数で差分だけを上書きする。
+実機は `params/real/nav2.yaml`、シミュレータは `params/sim/nav2.yaml` を使う。両方を別々に調整でき、現在の主要差分は次のとおり。
 
 | 項目 | シミュレーション | 実機 |
 |---|---|---|
@@ -74,7 +80,7 @@ ZED、SAM3、Hokuyo、semantic layer、STVL、`/scan3` は含まない。VLP-16�
 
 ## SLAM Toolbox
 
-実機/シミュ共通設定は1ファイルで、時刻とTFだけをlaunchで切り替える。入力は `/scan`、出力TFは `map -> <prefix>/odom`。
+実機は `params/real/slam_toolbox.yaml`、シミュレータは `params/sim/slam_toolbox.yaml` を使う。入力は `/scan`、出力TFは `map -> <prefix>/odom`。
 
 ```bash
 koko_slamtoolbox_sim   # use_sim_time=true
@@ -112,6 +118,13 @@ Nav2とtwist_muxは別コマンドである。実機Nav2試験では `koko_twist
 - ZED/SAM3/RTAB-MAP起動スクリプト
 - semantic/STVL、Hokuyo、docking、loopbackのパラメータ
 - MPPI走行モード切替スクリプト
+
+`src/robotbase_bringup/config/` の複製も廃止し、`params/` だけを正本にした。実機とシミュレーションの差分確認例:
+
+```bash
+diff -u params/real/nav2.yaml params/sim/nav2.yaml
+diff -u params/real/slam_toolbox.yaml params/sim/slam_toolbox.yaml
+```
 
 ## 変更後チェック
 

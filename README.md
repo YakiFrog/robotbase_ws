@@ -12,7 +12,7 @@ SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動
 - Nav2による実機走行: 未動作。パス生成後に走り始めない
 - Gazeboシミュレータ: 構築・動作確認済み
 - シミュレータでの2D地図生成: 動作確認済み
-- シミュレータでのNav2自律移動: 新しい分離launch/共通params/`robot/*` TFで動作確認済み（障害物迂回ゴール成功）
+- シミュレータでのNav2自律移動: 分離launch/シミュレーション専用params/`robot/*` TFで動作確認済み（障害物迂回ゴール成功）
 - 原因: 実機トピックを記録していないため未確定。ただし、コード上の優先度は次のとおり
 
 1. 旧設定の `controller_server.use_realtime_priority: true` に対して、実機PCのRT優先度権限が未設定
@@ -20,7 +20,7 @@ SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動
 3. `/odom/filtered`、`/scan`、TF、ローカルコストマップのいずれかが未更新
 4. `keyop2` または `/stop` が `twist_mux` のNav2入力より高い優先度を保持
 
-最有力だった1に対し、新しい共通設定では `use_realtime_priority: false` に変更済みです。実機での再確認はまだです。
+最有力だった1に対し、新しい実機設定では `use_realtime_priority: false` に変更済みです。実機での再確認はまだです。
 
 詳細と実機での判定手順は [Nav2無走行の切り分け](DOCS/NAV2_NO_MOTION.md) を参照してください。
 
@@ -132,8 +132,13 @@ Failed to make progress
 
 | パス | 役割 |
 |---|---|
-| `src/robotbase_bringup/` | ココちゃん専用URDF、RViz、実機/シミュ共通Nav2・SLAM・EKF設定 |
+| `params/real/` | 実機用Nav2・SLAM・twist_mux・Roboteq・IMU・EKF・Velodyne設定 |
+| `params/sim/` | シミュレーション用Nav2・SLAM・twist_mux・点群変換設定 |
+| `params/common/` | 実機・シミュレーション共通のキーボード操作設定 |
+| `src/robotbase_bringup/` | ココちゃん専用URDF、RViz、実機起動launch |
 | `src/robotbase_sim/` | Gazebo SimとVLP-16/IMUの模擬センサー |
+| `src/robotbase_keyop/` | 実機・シミュレーション共通のキーボード手動操作 |
+| `rviz/` | Save Configを次回起動へ引き継ぐTF接頭辞別RViz設定 |
 | `src/sirius/` | 移植元コード。現在の主要launch/paramsの正本ではない |
 | `src/roboteq_ros2_jazzy_driver/` | モータ指令とホイールオドメトリ |
 | `src/navigation2/` | ワークスペース内でビルドするNav2本体 |
@@ -148,6 +153,7 @@ Failed to make progress
 
 - [DOCS索引](DOCS/README.md)
 - [短いプロジェクトコンテキスト](DOCS/PROJECT_CONTEXT.md) — 人・AIとも最初に読む
+- [実機PCへの移行・初回試験](DOCS/REAL_PC_MIGRATION.md)
 - [構成、データフロー、SIRIUSとの差分](DOCS/ARCHITECTURE.md)
 - [Nav2無走行の原因候補と切り分け](DOCS/NAV2_NO_MOTION.md)
 - [設定の正本と既知の課題](DOCS/CONFIGURATION.md)

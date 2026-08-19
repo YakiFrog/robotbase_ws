@@ -15,7 +15,7 @@
 | `witmotion_ros` | IMU入力 |
 | `navigation2` | Nav2本体 |
 | `slam_toolbox` | 2D SLAM |
-| `sirius_keyop` | 移植済みの手動操作ノード。package名は互換上残る |
+| `robotbase_keyop` | ココちゃん専用の手動操作ノード。`/cmd_vel_teleop` と `/stop` を出力 |
 
 `src/sirius/sirius_description` と `sirius_navigation` 内の旧launchは、ココちゃんのRViz/Nav2/SLAMから呼ばない。
 
@@ -60,9 +60,9 @@ RViz / NavigateToPose
 | 境界 | ファイル |
 |---|---|
 | Nav2 node起動とremap | `robotbase_bringup/launch/nav2.launch.py` |
-| Nav2 pluginとcostmap | `robotbase_bringup/config/nav2.yaml` |
-| mux入力と優先度 | `robotbase_bringup/config/twist_mux.yaml` |
-| Roboteq入力と車輪値 | `robotbase_bringup/config/roboteq.yaml` |
+| Nav2 pluginとcostmap | `params/real/nav2.yaml` / `params/sim/nav2.yaml` |
+| mux入力と優先度 | `params/real/twist_mux.yaml` / `params/sim/twist_mux.yaml` |
+| Roboteq入力と車輪値 | `params/real/roboteq.yaml` |
 
 ### 手動操作
 

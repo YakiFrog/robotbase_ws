@@ -1,0 +1,8 @@
+# GazeboのVLP-16相当点群から2D /scanを生成する設定。
+vlp16_to_scan:
+  ros__parameters:
+    use_sim_time: true
+    ring: 8
+    resolution: 0.008726646
+    use_multi_rings: false
+

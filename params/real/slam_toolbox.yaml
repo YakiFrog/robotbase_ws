@@ -1,3 +1,4 @@
+# ココちゃん実機用SLAM Toolbox設定。
 slam_toolbox:
   ros__parameters:
     use_sim_time: false

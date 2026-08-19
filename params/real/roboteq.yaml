@@ -1,3 +1,4 @@
+# ココちゃん実機用Roboteq設定。車輪径・トレッド幅・encoder符号は実測値に合わせる。
 roboteq_ros2_driver:
   ros__parameters:
     pub_odom_tf: true

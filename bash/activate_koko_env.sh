@@ -47,6 +47,7 @@ export GZ_PARTITION="${ROBOTBASE_GZ_PARTITION}"
 export ROBOTBASE_DISPLAY_NAME
 export ROBOTBASE_ID
 export ROBOTBASE_TF_PREFIX
+export ROBOTBASE_PARAMS_DIR="${_KOKO_ACTIVATE_WS}/params"
 
 unset _koko_path_variable
 unset -f _koko_remove_sirius_entries

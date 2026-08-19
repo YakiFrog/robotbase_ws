@@ -2,7 +2,6 @@
 
 import os
 
-from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -12,8 +11,10 @@ from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
-    share = get_package_share_directory('robotbase_bringup')
-    default_params = os.path.join(share, 'config', 'ekf.yaml')
+    params_root = os.environ.get(
+        'ROBOTBASE_PARAMS_DIR',
+        os.path.join(os.path.expanduser('~'), 'robotbase_ws', 'params'))
+    default_params = os.path.join(params_root, 'real', 'ekf.yaml')
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
     tf_prefix = LaunchConfiguration('tf_prefix')

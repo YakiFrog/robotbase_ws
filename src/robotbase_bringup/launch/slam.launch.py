@@ -11,9 +11,11 @@ from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
-    share = get_package_share_directory('robotbase_bringup')
     slam_share = get_package_share_directory('slam_toolbox')
-    default_params = os.path.join(share, 'config', 'slam_toolbox.yaml')
+    params_root = os.environ.get(
+        'ROBOTBASE_PARAMS_DIR',
+        os.path.join(os.path.expanduser('~'), 'robotbase_ws', 'params'))
+    default_params = os.path.join(params_root, 'real', 'slam_toolbox.yaml')
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     slam_config_file = LaunchConfiguration('slam_config_file')

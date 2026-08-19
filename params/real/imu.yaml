@@ -1,3 +1,4 @@
+# ココちゃん実機用WitMotion IMU設定。
 witmotion:
   ros__parameters:
     use_sim_time: false

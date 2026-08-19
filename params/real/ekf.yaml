@@ -1,4 +1,4 @@
-# 差動二輪: wheel odometryの前進速度 + IMUのyaw角速度を融合する。
+# ココちゃん実機用。差動二輪のwheel odometry前進速度とIMU yaw角速度を融合する。
 ekf_node:
   ros__parameters:
     use_sim_time: false

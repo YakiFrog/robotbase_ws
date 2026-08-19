@@ -27,9 +27,6 @@ alias koko_roboteq_no_sf='koko_src && ros2 launch robotbase_bringup roboteq.laun
 # Velodyne起動
 alias koko_velodyne='koko_src && ros2 launch robotbase_bringup velodyne.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
 
-# 新機体Controller起動（パッケージ名は移植元互換）
-alias koko_scn='koko_src && ros2 run sirius_keyop sirius_controller_node'
-
 # IMU起動(udevルール設定済み前提)
 alias koko_imu='koko_src && ros2 launch robotbase_bringup imu.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
 
@@ -72,7 +69,7 @@ alias koko_pcl_detect='koko_env && bash ~/robotbase_ws/bash/startup_bash/pcl_det
 # GROUP: ナビゲーション
 
 # 手動操作 V2（優先順位対応版）
-alias koko_keyop2='koko_src && ros2 run sirius_keyop sirius_keyop_v2'
+alias koko_keyop2='koko_src && ros2 run robotbase_keyop robotbase_keyop_v2 --ros-args --params-file "${ROBOTBASE_PARAMS_DIR}/common/keyop.yaml"'
 
 # ココちゃんランチャー起動
 alias koko_launcher='koko_env && cd ${HOME}/robotbase_ws/other_programs/sirius_launcher && python3 robot_launcher.py'
@@ -91,15 +88,6 @@ alias koko_slamtoolbox_real='koko_src && ros2 launch robotbase_bringup slam.laun
 
 # Sensor Fusion起動(実時間)
 alias koko_sf_real='koko_src && ros2 launch robotbase_bringup sensor_fusion.launch.py use_sim_time:=false tf_prefix:=${ROBOTBASE_TF_PREFIX}'
-
-# ウェイポイントナビゲーション起動
-alias koko_mv_goal='koko_env && bash ~/robotbase_ws/bash/startup_bash/move_goal.sh'
-
-# ウェイポイント保存（距離）
-alias koko_get_pos_dis='koko_env && bash ~/robotbase_ws/bash/startup_bash/get_pos_dis.sh'
-
-# ウェイポイント保存（手動）
-alias koko_get_pos_ent='koko_env && bash ~/robotbase_ws/bash/startup_bash/get_pos_ent.sh'
 
 # マップ保存起動
 alias koko_map_save='koko_env && bash ~/robotbase_ws/bash/startup_bash/map_save.sh'

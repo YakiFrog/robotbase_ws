@@ -60,7 +60,7 @@ $ ulimit -r
 
 ### 適用済みの対策
 
-新しい `src/robotbase_bringup/config/nav2.yaml` は次の値で固定した。
+新しい実機用 `params/real/nav2.yaml` は次の値で固定した。
 
 ```yaml
 use_realtime_priority: false
@@ -195,7 +195,7 @@ ros2 run tf2_ros tf2_echo map robot/base_footprint
 
 ### 5.2 `/scan` またはsensor TFがない
 
-共通 `robotbase_bringup/config/nav2.yaml` はAMCL、global costmap、local costmapで `/scan` を参照する。
+実機用 `params/real/nav2.yaml` はAMCL、global costmap、local costmapで `/scan` を参照する。
 
 ```bash
 ros2 topic hz /scan
@@ -283,7 +283,7 @@ ros2 topic info /cmd_vel_smoothed -v
 ```bash
 ros2 pkg prefix robotbase_bringup
 ros2 pkg prefix roboteq_ros2_driver
-ros2 pkg executables sirius_keyop
+ros2 pkg executables robotbase_keyop
 ```
 
 必要なら再ビルド後、新しいターミナルでrobotbaseだけをsourceする。

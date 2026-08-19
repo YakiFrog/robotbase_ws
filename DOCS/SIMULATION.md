@@ -67,12 +67,10 @@ koko_slamtoolbox_sim
 RVizの地図を見ながら `/cmd_vel_teleop` で走行します。保存例:
 
 ```bash
-mkdir -p ~/robotbase_ws/sim_maps
-ros2 run nav2_map_server map_saver_cli \
-  -f ~/robotbase_ws/sim_maps/robotbase_arena
+koko_map_save
 ```
 
-`robotbase_arena.yaml` と画像ファイルが生成されます。
+地図名を入力すると、`~/robotbase_ws/maps_waypoints/maps/` に `.yaml` と `.pgm` が生成されます。保存先ディレクトリはスクリプトが自動作成します。
 
 ### 既存地図でNav2自律移動
 
@@ -84,10 +82,12 @@ koko_nav2_sim_map
 
 # SLAMで保存した任意地図
 ros2 launch robotbase_sim navigation.launch.py \
-  map:=$HOME/robotbase_ws/sim_maps/robotbase_arena.yaml
+  map:=$HOME/robotbase_ws/maps_waypoints/maps/koko-sim.yaml
 ```
 
 RVizの「Nav2 Goal」でゴールを指定します。同梱地図はGazeboワールドと一致し、開始位置は `(0, 0, 0)` です。CLIで確認済みゴールを再現する場合:
+
+RVizのDisplaysでは `Global Costmap`、`Local Costmap`、`Global Plan`、`Local Plan`、`Local Footprint` を個別に表示・非表示できます。右側の `Navigation 2` はNav2標準パネルです。
 
 ```bash
 ros2 action send_goal /navigate_to_pose \
@@ -238,8 +238,11 @@ ros2 topic hz /cmd_vel
 | `urdf/robotbase.urdf` | robot_state_publisher用の固定TFと表示モデル |
 | `worlds/test_arena.sdf` | 外周壁と複数障害物を持つ試験場 |
 | `maps/test_arena.yaml` | Nav2用の同梱地図 |
-| `config/slam_toolbox.yaml` | 2D SLAM設定 |
-| `config/twist_mux.yaml` | 手動/Nav2/停止の速度優先順位 |
+| `params/sim/nav2.yaml` | シミュレーション用Nav2設定 |
+| `params/sim/slam_toolbox.yaml` | 2D SLAM設定 |
+| `params/sim/twist_mux.yaml` | 手動/Nav2/停止の速度優先順位 |
+| `params/sim/velodyne_laserscan.yaml` | VLP-16相当点群から `/scan` への変換 |
+| `params/sim/idle_twist.yaml` | 停止時のゼロ速度発行 |
 | `rviz/robotbase.rviz` | SLAM/Nav2共通RViz設定 |
 
 ## 現在の制約

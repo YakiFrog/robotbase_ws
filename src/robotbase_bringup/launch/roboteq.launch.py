@@ -13,7 +13,10 @@ from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
     share = get_package_share_directory('robotbase_bringup')
-    default_params = os.path.join(share, 'config', 'roboteq.yaml')
+    params_root = os.environ.get(
+        'ROBOTBASE_PARAMS_DIR',
+        os.path.join(os.path.expanduser('~'), 'robotbase_ws', 'params'))
+    default_params = os.path.join(params_root, 'real', 'roboteq.yaml')
     urdf_path = os.path.join(share, 'urdf', 'robotbase.urdf')
     with open(urdf_path, 'r', encoding='utf-8') as urdf_file:
         robot_description = urdf_file.read()

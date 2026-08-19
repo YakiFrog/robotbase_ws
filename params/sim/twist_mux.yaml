@@ -1,3 +1,4 @@
+# ココちゃんGazeboシミュレーション用twist_mux設定。
 twist_mux:
   ros__parameters:
     use_stamped: false
