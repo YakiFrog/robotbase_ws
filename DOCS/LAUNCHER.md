@@ -48,7 +48,7 @@ source ~/robotbase_ws/bash/bash_alias2.sh
 | `koko_sim` | Gazebo単体 |
 | `koko_rviz_sim` | シミュレーション用RViz単体 |
 | `koko_slamtoolbox_sim` | シミュレーション用SLAM単体 |
-| `koko_nav2_sim_map` | 同梱済み地図を使うシミュレーションNav2 |
+| `koko_nav2_sim_map` | 同梱・保存済み地図を一覧から選ぶシミュレーションNav2 |
 | `koko_nav2_sim_slam` | 地図なしでSLAMとNav2を同時起動 |
 | `koko_roboteq` | 新機体のRoboteq |
 | `koko_keyop2` | 新機体の手動操作 |

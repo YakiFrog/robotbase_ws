@@ -56,11 +56,11 @@ map
 | 項目 | シミュレーション | 実機 |
 |---|---|---|
 | `use_sim_time` | `true` | `false` |
-| localization | 固定 `map -> robot/odom` | AMCL |
+| localization | AMCL（既定）、固定TF（試験用オプション） | AMCL |
 | odometry | `/odom` | `/odom/filtered` |
 | LaserScan | `/scan` | `/scan` |
 
-起動するNav2ノードはcontroller、planner、smoother、behavior、BT navigator、velocity smoother、map serverと、実機時のAMCLだけ。Route、Docking、Waypoint Follower、Loopback Simulator、Collision Monitorは現在の用途から外した。
+起動するNav2ノードはcontroller、planner、smoother、behavior、BT navigator、velocity smoother、map server、AMCL。Route、Docking、Waypoint Follower、Loopback Simulator、Collision Monitorは現在の用途から外した。シミュレーションでも既存地図モードの既定はAMCLなので、RVizの `2D Pose Estimate` が `/initialpose` を通して有効になる。経路制御だけを再現性優先で試す場合は `localization:=static` を明示できる。
 
 設定の要点:
 
@@ -75,8 +75,11 @@ map
 | footprint | 前0.40、後0.45、左右0.28 m |
 | local costmap | 6 x 6 m、0.05 m/cell |
 | obstacle source | `/scan` のみ |
+| scan obstacle height | 0.0〜2.0 m（source単位で明示） |
 
 ZED、SAM3、Hokuyo、semantic layer、STVL、`/scan3` は含まない。VLP-16点群は `velodyne_laserscan` により `/scan` へ変換して使う。
+
+Nav2 JazzyのObstacleLayerは、plugin全体とは別に観測source `scan.max_obstacle_height` を持ち、未指定時は `0.0` mになる。これをglobal/local costmapの両方で `2.0` mへ明示している。未指定に戻すと、床より高いVLP-16由来のLaserScan点が全件破棄され、local costmapが全セル0になる。
 
 ## SLAM Toolbox
 

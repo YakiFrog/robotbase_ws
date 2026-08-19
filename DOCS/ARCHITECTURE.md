@@ -37,7 +37,7 @@ TF責務:
 
 | TF | 配信元 |
 |---|---|
-| `map -> robot/odom` | 実機はAMCL、SLAM時はslam_toolbox、Nav2 simは固定TF |
+| `map -> robot/odom` | 既存地図ではAMCL、SLAM時はslam_toolbox、Nav2 simの試験用static指定時だけ固定TF |
 | `robot/odom -> robot/base_footprint` | 実機はEKF、simはGazebo DiffDrive |
 | `robot/base_footprint -> robot/base_link/lidar_link/imu_link` | robot_state_publisher |
 
@@ -87,7 +87,7 @@ koko_slamtoolbox_sim
   slam_toolboxのみ
 
 koko_nav2_sim_map
-  map server + 固定localization + 最小Nav2のみ
+  map server + AMCL + 最小Nav2のみ
 
 koko_nav2_sim_slam
   slam_toolbox + 最小Nav2（地図なし）

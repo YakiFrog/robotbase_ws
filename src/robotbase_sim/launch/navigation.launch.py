@@ -16,12 +16,16 @@ def generate_launch_description():
         'ROBOTBASE_PARAMS_DIR',
         os.path.join(os.path.expanduser('~'), 'robotbase_ws', 'params'))
     map_file = LaunchConfiguration('map')
+    localization = LaunchConfiguration('localization')
     params_file = LaunchConfiguration('params_file')
     tf_prefix = LaunchConfiguration('tf_prefix')
     default_map = os.path.join(sim_share, 'maps', 'test_arena.yaml')
 
     return LaunchDescription([
         DeclareLaunchArgument('map', default_value=default_map),
+        DeclareLaunchArgument(
+            'localization', default_value='amcl',
+            description='amcl (RViz 2D Pose Estimate) or static (ground-truth test mode).'),
         DeclareLaunchArgument('tf_prefix', default_value='robot'),
         DeclareLaunchArgument(
             'params_file',
@@ -31,7 +35,7 @@ def generate_launch_description():
                 os.path.join(bringup, 'launch', 'nav2.launch.py')),
             launch_arguments={
                 'use_sim_time': 'true',
-                'localization': 'static',
+                'localization': localization,
                 'map': map_file,
                 'tf_prefix': tf_prefix,
                 'odom_topic': '/odom',

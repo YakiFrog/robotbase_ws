@@ -18,8 +18,10 @@
 | `/velodyne_points` / `/scan` | 点群配信あり / 約10 Hz |
 | `/imu` | 約100 Hz |
 | slam_toolbox | Lifecycle `active`、`map -> base` TFと `/map` を確認 |
-| Nav2 | 管理ノードすべて `active` |
-| 自律走行 | `(0, 0)`から障害物を迂回して`(4, 0)`へ到達、`SUCCEEDED` |
+| Nav2 | 管理ノードすべて `active`。AMCLも`active` |
+| `2D Pose Estimate` | `/initialpose`のAMCL購読と、指定値への`/amcl_pose`更新を確認 |
+| Local Costmap | 120 x 120セル、約1.67 Hz。障害物・inflationの非ゼロセルを確認 |
+| 自律走行（static試験モード） | `(0, 0)`から障害物を迂回して`(4, 0)`へ到達、`SUCCEEDED` |
 | 到着姿勢 | 新しいDWB設定でodom位置 `(3.841, -0.164)`（許容半径0.25 m内） |
 | 停止 | 完了後の `/cmd_vel` がゼロ |
 
@@ -75,7 +77,7 @@ koko_map_save
 ### 既存地図でNav2自律移動
 
 ```bash
-# 同梱のtest_arena地図
+# 地図一覧から同梱test_arenaまたは保存済み地図を選択
 koko_sim
 koko_rviz_sim
 koko_nav2_sim_map
@@ -86,6 +88,14 @@ ros2 launch robotbase_sim navigation.launch.py \
 ```
 
 RVizの「Nav2 Goal」でゴールを指定します。同梱地図はGazeboワールドと一致し、開始位置は `(0, 0, 0)` です。CLIで確認済みゴールを再現する場合:
+
+既存地図モードはAMCLを起動します。起動直後または自己位置がずれた場合は、RVizの `2D Pose Estimate` で地図上の現在位置と向きを指定してください。矢印を放した時点で `/initialpose` がAMCLへ渡り、`map -> robot/odom` が更新されます。
+
+`koko_nav2_sim_map` は、同梱 `test_arena` と `maps_waypoints/maps/` 内の `.yaml` / `.yml` を番号付き一覧で表示します。地図一覧だけを端末で確認する場合:
+
+```bash
+bash ~/robotbase_ws/bash/startup_bash/nav2_bringup_sim.sh --list
+```
 
 RVizのDisplaysでは `Global Costmap`、`Local Costmap`、`Global Plan`、`Local Plan`、`Local Footprint` を個別に表示・非表示できます。右側の `Navigation 2` はNav2標準パネルです。
 
@@ -125,7 +135,7 @@ ros2 launch robotbase_sim navigation_slam.launch.py
 | `koko_sim` | Gazebo、ロボット、センサー、twist_mux |
 | `koko_rviz_sim` | RVizのみ |
 | `koko_slamtoolbox_sim` | slam_toolboxのみ |
-| `koko_nav2_sim_map` | 同梱地図サーバー + 固定localization + Nav2 |
+| `koko_nav2_sim_map` | 同梱地図サーバー + AMCL + Nav2 |
 | `koko_nav2_sim_slam` | slam_toolbox + Nav2（map serverなし） |
 
 シミュレーションでは `koko_sim` が `twist_mux` を起動するため、`koko_twist_mux` は不要です。実機では `koko_twist_mux` を別途起動します。
@@ -163,10 +173,10 @@ map                         slam_toolboxが推定
       └─ robot/imu_link
 ```
 
-### Nav2モード
+### Nav2モード（既定: AMCL）
 
 ```text
-map                         固定identity TF（真値ローカライゼーション）
+map                         AMCLが推定
 └─ robot/odom
    └─ robot/base_footprint
       ├─ robot/base_link
@@ -174,7 +184,13 @@ map                         固定identity TF（真値ローカライゼーシ�
       └─ robot/imu_link
 ```
 
-Nav2モードでAMCLを使わない理由は、簡易環境で経路計画・制御・速度トピックを安定して試すためです。VLP16の単一ringから得る2D scanだけでAMCLを使う試験では、長距離走行時にGazebo真値から大きくずれることを確認しました。位置推定そのものを評価したい場合は、固定TFを外してAMCLまたはEKFを別途構成してください。
+既存地図モードの既定は、実機と同じAMCLです。VLP16の単一ringから得る2D scanを使うため、長距離走行では推定がずれる可能性があります。自己位置を再設定する場合はRVizの `2D Pose Estimate` を使います。
+
+経路計画・controllerだけを再現性優先で試し、自己位置推定を評価しない場合に限り、固定identity TFへ切り替えられます。このモードではAMCLが起動しないため `2D Pose Estimate` は効きません。
+
+```bash
+ros2 launch robotbase_sim navigation.launch.py localization:=static
+```
 
 既定接頭辞は `robot` です。`robot.env` の `ROBOTBASE_TF_PREFIX` を変えると、alias経由のGazebo、URDF、SLAM、Nav2、RVizへ一括反映されます。
 
@@ -232,7 +248,7 @@ ros2 topic hz /cmd_vel
 |---|---|
 | `launch/sim.launch.py` | Gazebo、bridge、TF、VLP16変換、twist_mux |
 | `launch/mapping.launch.py` | slam_toolboxのみ |
-| `launch/navigation.launch.py` | 地図 + 真値localization + Nav2のみ |
+| `launch/navigation.launch.py` | 地図 + AMCL（または試験用固定TF）+ Nav2のみ |
 | `launch/navigation_slam.launch.py` | slam_toolbox + Nav2（地図なし） |
 | `models/robotbase.sdf` | 物理モデル、VLP16、IMU、DiffDrive plugin |
 | `urdf/robotbase.urdf` | robot_state_publisher用の固定TFと表示モデル |
@@ -248,7 +264,7 @@ ros2 topic hz /cmd_vel
 ## 現在の制約
 
 - IMUは配信確認用で、現在のオドメトリには融合していません。
-- Nav2モードは真値ローカライゼーションのため、AMCL性能は評価しません。
+- VLP16の単一ringから作る2D scanのため、AMCLの長距離精度は実機設定と合わせて調整が必要です。
 - VLP16はGPU lidarによる近似で、実機固有のpacket timingやdriver遅延は再現しません。
 - 接触、スリップ、エンコーダ誤差は簡略化されています。
 - GUI環境によってEGL警告が出ても、ヘッドレス実行とROSトピックが動作する場合があります。

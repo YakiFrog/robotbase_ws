@@ -42,8 +42,8 @@ alias koko_rviz_sim='koko_src && ros2 launch robotbase_sim rviz.launch.py tf_pre
 # 地図作成用SLAM Toolboxのみ起動（koko_simを先に起動）
 alias koko_slamtoolbox_sim='koko_src && ros2 launch robotbase_sim mapping.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
 
-# 既存の同梱地図を使うNav2（koko_simを先に起動）
-alias koko_nav2_sim_map='koko_src && ros2 launch robotbase_sim navigation.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
+# 一覧から既存地図を選ぶNav2（koko_simを先に起動）
+alias koko_nav2_sim_map='koko_env && bash "${HOME}/robotbase_ws/bash/startup_bash/nav2_bringup_sim.sh"'
 
 # 地図なし: SLAM ToolboxとNav2を同時起動（koko_simを先に起動）
 alias koko_nav2_sim_slam='koko_src && ros2 launch robotbase_sim navigation_slam.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'

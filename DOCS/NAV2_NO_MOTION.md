@@ -218,12 +218,13 @@ VLP-16 driverと `velodyne_laserscan` が `/scan` を生成する。ZED/Hokuyo/�
 現在のlocal costmap:
 
 - rolling 6 x 6 m
-- `track_unknown_space: true`
+- 0.05 m/cell、free space初期化
 - 有効な観測pluginは2D `/scan` のobstacle layerのみ
+- `scan.max_obstacle_height: 2.0` m
 - inflation radius 0.70 m
 - footprint 0.85 x 0.56 m
 
-`/scan` のclear rayが入らないと未知領域が残る。センサー自己点、誤TF、地面反射でロボット周囲がlethalになるとDWBは有効軌道を出せない。
+`scan.max_obstacle_height` は観測source内に必要で、未指定時の既定値は0.0 m。VLP-16の取付高さが0 mより上の場合、これがないとスキャン点が全件除外され、配信トピックが存在してもlocal costmapは全セル0になる。反対に、センサー自己点、誤TF、地面反射でロボット周囲がlethalになるとDWBは有効軌道を出せない。
 
 RVizで次を同時表示する。
 

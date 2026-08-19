@@ -42,7 +42,7 @@ koko_nav2_sim_map
 koko_nav2_sim_slam
 ```
 
-`koko_nav2_sim_map` は同梱済み地図、`koko_nav2_sim_slam` は地図なしでSLAM ToolboxとNav2を同時に使います。GazeboとRVizはどちらのモードでも別起動です。`twist_mux` は `koko_sim` に含まれるため、シミュレーションで別起動する必要はありません。
+`koko_nav2_sim_map` は同梱・保存済み地図を端末の一覧から選択し、AMCLを起動します。RVizの `2D Pose Estimate` で初期姿勢を指定できます。`koko_nav2_sim_slam` は地図なしでSLAM ToolboxとNav2を同時に使います。GazeboとRVizはどちらのモードでも別起動です。`twist_mux` は `koko_sim` に含まれるため、シミュレーションで別起動する必要はありません。
 
 ## 速度指令の経路
 
