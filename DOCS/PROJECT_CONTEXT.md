@@ -47,6 +47,8 @@ TFの `robot` は `robot.env` の `ROBOTBASE_TF_PREFIX` で変更可能。表示
 
 シミュレーション:
 
+以下は自動的に`ROS_DOMAIN_ID=58`を使用する。実機コマンドは57を使用する。
+
 ```bash
 koko_sim
 koko_rviz_sim

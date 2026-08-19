@@ -16,7 +16,8 @@
 | EKF・Roboteq・IMU | `params/real/ekf.yaml`、`roboteq.yaml`、`imu.yaml` |
 | Velodyne VLP-16 | `params/real/velodyne.yaml`、`VLP16db.yaml` |
 | シミュレーション点群変換・停止速度 | `params/sim/velodyne_laserscan.yaml`、`idle_twist.yaml` |
-| キーボード手動操作（共通） | `params/common/keyop.yaml` |
+| キーボード手動操作（実機） | `params/common/keyop.yaml` |
+| キーボード手動操作（シミュレーション） | `params/sim/keyop.yaml` |
 | Foxglove Bridge（共通） | `params/common/foxglove.yaml`、待受先は`robot.env` |
 | Gazeboモデル | `src/robotbase_sim/models/robotbase.sdf` |
 | 実機Nav2地図選択 | `bash/startup_bash/nav2_bringup_real.sh` |
@@ -31,6 +32,7 @@ RVizの配布用テンプレート `src/robotbase_bringup/rviz/robotbase.rviz` �
 ROBOTBASE_DISPLAY_NAME="ココちゃん"
 ROBOTBASE_ID="koko"
 ROBOTBASE_ROS_DOMAIN_ID="57"
+ROBOTBASE_SIM_ROS_DOMAIN_ID="58"
 ROBOTBASE_GZ_PARTITION="koko"
 ROBOTBASE_TF_PREFIX="robot"
 ROBOTBASE_FOXGLOVE_ADDRESS="0.0.0.0"
@@ -94,7 +96,7 @@ MPPIの予測時間は2.8秒とする。最大速度0.9 m/sでの予測移動量
 
 障害物は`CostCritic.cost_weight: 4.0`、`consider_footprint: true`、`collision_cost: 1000000.0`で評価する。旧weight 10はinflation領域へ入るコストが強すぎ、経路より空き領域の周回を選びやすかった。重みを下げても、長方形footprintが接触する軌道には100万コストが付くため、衝突禁止判定は維持される。
 
-実機は前後速度の絶対値が`0.10 m/s`未満では動かない前提とする。実機用MPPIだけに`VelocityDeadbandCritic`を追加して微小速度の軌道へコストを付け、`controller_server.min_x_velocity_threshold: 0.10`で同範囲のodomを停止として扱う。さらに`velocity_smoother.deadband_velocity: [0.10, 0.0, 0.0]`で、加減速途中や停止直前の無効な前後指令を0へ丸める。シミュレーション用は物理モデルとの比較を崩さないため0のままにしている。角速度の不感帯は未計測なので設定していない。
+実機は前後速度の絶対値が`0.10 m/s`未満では動かない前提とする。実機用MPPIの`VelocityDeadbandCritic: 0.10 m/s`で微小速度の軌道へコストを付け、controllerのodom閾値とvelocity smootherのdeadbandも0.10 m/sにする。シミュレーションでも0.1 m/s付近で停止状態に留まる事例があったため、MPPI Criticを0.12 m/s、odom閾値とsmootherを0.10 m/s、Keyop2の直進刻みを0.20 m/sとする。角速度の不感帯は未計測なので、実機・シミュレーションとも0のままにしている。
 
 ## SLAM Toolbox
 

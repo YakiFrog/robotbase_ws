@@ -5,13 +5,13 @@
 ココちゃんのROS 2グラフをFoxgloveへWebSocket配信する。実機とGazeboで同じサーバーを使い、起動時のROS Domainに存在するトピック、TF、サービス、パラメータを公開する。
 
 ```text
-ROS_DOMAIN_ID=57
+ROS_DOMAIN_ID=57  # 実機。シミュレーションは58
   └─ koko_foxglove_bridge
        └─ ws://0.0.0.0:8766
             └─ Foxglove Desktop / Web
 ```
 
-Siriusの標準Foxglove Bridgeはポート8765を使うため、同一PCで同時起動できるようココちゃんは8766を既定値にしている。ROSグラフもSiriusのDomain 56とココちゃんのDomain 57で分離される。
+Siriusの標準Foxglove Bridgeはポート8765を使うため、同一PCで同時起動できるようココちゃんは8766を既定値にしている。ROSグラフはSiriusのDomain 56、ココちゃん実機のDomain 57、シミュレーションのDomain 58で分離される。
 
 ## 初回導入
 
@@ -32,7 +32,8 @@ source install/setup.bash
 実機またはシミュレーションのROSノードを起動した後、別ターミナルまたはランチャーの「ユーティリティ」タブから起動する。
 
 ```bash
-koko_foxglove
+koko_foxglove      # 実機Domain 57
+koko_foxglove_sim  # シミュレーションDomain 58
 ```
 
 起動端末にPCのIPアドレスとポートが表示される。Foxgloveで「Open connection」→「Foxglove WebSocket」を選び、次を指定する。
@@ -60,7 +61,7 @@ sudo ufw allow 8766/tcp
 - topic/service/capability設定: `params/common/foxglove.yaml`
 - ROSノード起動: `src/robotbase_bringup/launch/foxglove.launch.py`
 - 導入確認・接続先表示: `bash/startup_bash/foxglove_server.sh`
-- Bash/UI項目: `bash/bash_alias2.sh` の `koko_foxglove`
+- Bash/UI項目: `bash/bash_alias2.sh` の `koko_foxglove` / `koko_foxglove_sim`
 
 ポート変更例:
 

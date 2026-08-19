@@ -29,7 +29,7 @@
 | DWB時点の参考記録 | odom位置 `(3.841, -0.164)`へ到着（許容半径0.25 m内） |
 | 停止 | 完了後の `/cmd_vel` がゼロ |
 
-GazeboのDiffDriveはモデル生成後に`/model/<tf_prefix>/enable`へ`true`を自動送信する。GUIの操作有無に依存せず、headless起動でもNav2の速度指令を受け付ける。
+GazeboのDiffDriveはplugin既定で有効になる。起動後は`/cmd_vel`からGazebo Transport `/robot/cmd_vel`への到達と、車輪速度・`/odom`変化までを確認する。
 
 ## 初回ビルド
 
@@ -50,7 +50,7 @@ source install/setup.bash
 ### センサーと手動走行だけ
 
 ```bash
-ros2 launch robotbase_sim sim.launch.py
+koko_sim
 ```
 
 別ターミナルから次のように動かせます。
@@ -62,7 +62,7 @@ ros2 topic pub --rate 10 /cmd_vel_teleop geometry_msgs/msg/Twist \
 
 停止は発行側で `Ctrl-C` です。`idle_twist_publisher` が自動的にゼロ指令へ戻します。
 
-`koko_keyop2` は `w/x` の直進速度と `a/d` の角速度をそれぞれ保持します。純前進を試すときは `s` で両方をゼロにしてから `w` を押します。
+`koko_keyop2_sim` は `w/x` の直進速度を0.20 m/s、`a/d` の角速度を0.10 rad/sずつ変更して保持します。純前進を試すときは `s` で両方をゼロにしてから `w` を押します。
 
 ### SLAMで地図生成
 
@@ -75,7 +75,7 @@ koko_slamtoolbox_sim
 RVizの地図を見ながら `/cmd_vel_teleop` で走行します。保存例:
 
 ```bash
-koko_map_save
+koko_map_save_sim
 ```
 
 地図名を入力すると、`~/robotbase_ws/maps_waypoints/maps/` に `.yaml` と `.pgm` が生成されます。保存先ディレクトリはスクリプトが自動作成します。
@@ -126,6 +126,7 @@ koko_nav2_sim_slam
 CIやリモート端末では次を使用します。
 
 ```bash
+koko_sim_env
 ros2 launch robotbase_sim sim.launch.py gui:=false
 ros2 launch robotbase_sim mapping.launch.py
 # または
@@ -143,6 +144,8 @@ ros2 launch robotbase_sim navigation_slam.launch.py
 | `koko_slamtoolbox_sim` | slam_toolboxのみ |
 | `koko_nav2_sim_map` | 同梱地図サーバー + AMCL + Nav2 |
 | `koko_nav2_sim_slam` | slam_toolbox + Nav2（map serverなし） |
+| `koko_keyop2_sim` | Domain 58へ手動速度指令 |
+| `koko_map_save_sim` | Domain 58の`/map`を保存 |
 
 シミュレーションでは `koko_sim` が `twist_mux` を起動するため、`koko_twist_mux` は不要です。実機では `koko_twist_mux` を別途起動します。
 
@@ -200,7 +203,11 @@ ros2 launch robotbase_sim navigation.launch.py localization:=static
 
 既定接頭辞は `robot` です。`robot.env` の `ROBOTBASE_TF_PREFIX` を変えると、alias経由のGazebo、URDF、SLAM、Nav2、RVizへ一括反映されます。
 
-各 `koko_sim` 起動は `GZ_PARTITION` にプロセス固有の接尾辞を加えます。またGazebo内部のセンサー・odom・速度トピックも `/robot/...` に分離してからROS側の標準トピックへbridgeします。このため、終了し損ねた旧GazeboやSiriusモデルが同じPCに残っても `/scan3` へ混入しません。
+各 `koko_sim` 起動は `GZ_PARTITION` にプロセス固有の接尾辞を加えます。またGazebo内部のセンサー・odom・速度トピックも `/robot/...` に分離してからROS側の標準トピックへbridgeします。ROS graph自体も実機Domain 57とシミュレーションDomain 58へ分けるため、実機や別PCの`/clock`、TF、`/scan3`は混入しません。
+
+`koko_sim`は起動中ロックを保持し、Domain 58に既存`/clock`または残存RViz/Nav2/SLAMがある場合は起動を拒否する。Gazeboだけを再起動して古いRVizへ0秒からの時刻を送ると、`TF_OLD_DATA`、`Detected jump back in time`、RVizの異常終了を引き起こすためである。再起動時はシミュレーション関連端末をすべて閉じてから、`koko_sim`、RViz、SLAM/Nav2の順に起動する。
+
+シミュレーションでは0.1 m/s付近の指令で停止状態に留まる事例があったため、Keyop2の直進刻みを0.20 m/sとし、Nav2 MPPIへ`VelocityDeadbandCritic: 0.12 m/s`を設定する。velocity smootherは0.10 m/s未満を0へ丸める。Gazebo DiffDrive自体は起動時に有効になるため、`/model/robot/enable`の外部publishには依存しない。
 
 ## トピック経路
 

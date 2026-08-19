@@ -23,6 +23,7 @@ Bash設定を読み込んでいれば `koko_launcher` でも起動できます�
 ROBOTBASE_DISPLAY_NAME="ココちゃん"
 ROBOTBASE_ID="koko"
 ROBOTBASE_ROS_DOMAIN_ID="57"
+ROBOTBASE_SIM_ROS_DOMAIN_ID="58"
 ROBOTBASE_GZ_PARTITION="koko"
 ROBOTBASE_TF_PREFIX="robot"
 ```
@@ -33,7 +34,8 @@ ROBOTBASE_TF_PREFIX="robot"
 
 ## 通信とプロセスの分離
 
-- 子プロセス: `ROS_DOMAIN_ID=57`
+- 実機の子プロセス: `ROS_DOMAIN_ID=57`
+- シミュレーションの子プロセス: `ROS_DOMAIN_ID=58`
 - Gazebo Transport: `GZ_PARTITION=koko`
 - TF prefix: `ROBOTBASE_TF_PREFIX=robot`
 - PID/ログ: `/tmp/koko_launcher_*`

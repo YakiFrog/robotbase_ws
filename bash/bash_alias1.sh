@@ -7,6 +7,7 @@ source "${_KOKO_WS}/robot.env"
 
 # Siriusをsource済みの端末でも検索パスを混在させず、ココちゃん環境へ切り替える。
 alias koko_env='source "${_KOKO_WS}/bash/activate_koko_env.sh"'
+alias koko_sim_env='source "${_KOKO_WS}/bash/activate_koko_sim_env.sh"'
 
 # .bashrc編集
 alias koko_ebash='code ~/.bashrc && source ~/.bashrc'
@@ -19,6 +20,7 @@ alias koko_ws='cd "${_KOKO_WS}"'
 
 # ココちゃん環境を有効化
 alias koko_src='koko_env && koko_ws && source install/setup.bash'
+alias koko_sim_src='koko_sim_env && koko_ws && source install/setup.bash'
 
 # rosdep / build
 alias koko_rdep='koko_ws && rosdep install --from-paths src --ignore-src -riy'

@@ -37,19 +37,25 @@ alias koko_imu='koko_src && ros2 launch robotbase_bringup imu.launch.py tf_prefi
 # GROUP: シミュレーション
 
 # Gazebo Sim本体（VLP16 + IMU、RViz/SLAM/Nav2は起動しない）
-alias koko_sim='koko_src && ros2 launch robotbase_sim sim.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
+alias koko_sim='koko_sim_src && bash "${HOME}/robotbase_ws/bash/startup_bash/start_sim.sh" tf_prefix:=${ROBOTBASE_TF_PREFIX}'
 
 # RViz2のみ起動（Gazeboクロック、SLAM/Nav2は起動しない）
-alias koko_rviz_sim='koko_src && ros2 launch robotbase_sim rviz.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
+alias koko_rviz_sim='koko_sim_src && ros2 launch robotbase_sim rviz.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
 
 # 地図作成用SLAM Toolboxのみ起動（koko_simを先に起動）
-alias koko_slamtoolbox_sim='koko_src && ros2 launch robotbase_sim mapping.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
+alias koko_slamtoolbox_sim='koko_sim_src && ros2 launch robotbase_sim mapping.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
 
 # 一覧から既存地図を選ぶNav2（koko_simを先に起動）
-alias koko_nav2_sim_map='koko_env && bash "${HOME}/robotbase_ws/bash/startup_bash/nav2_bringup_sim.sh"'
+alias koko_nav2_sim_map='koko_sim_env && bash "${HOME}/robotbase_ws/bash/startup_bash/nav2_bringup_sim.sh"'
 
 # 地図なし: SLAM ToolboxとNav2を同時起動（koko_simを先に起動）
-alias koko_nav2_sim_slam='koko_src && ros2 launch robotbase_sim navigation_slam.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
+alias koko_nav2_sim_slam='koko_sim_src && ros2 launch robotbase_sim navigation_slam.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
+
+# シミュレーションROS Domainへ手動速度を送る。
+alias koko_keyop2_sim='koko_sim_src && ros2 run robotbase_keyop robotbase_keyop_v2 --ros-args --params-file "${ROBOTBASE_PARAMS_DIR}/sim/keyop.yaml"'
+
+# シミュレーションの/mapを保存する。
+alias koko_map_save_sim='koko_sim_env && bash ~/robotbase_ws/bash/startup_bash/map_save.sh'
 
 # TAB: ユーティリティ
 # GROUP: ユーティリティ
@@ -59,8 +65,11 @@ sudo apt install ros-jazzy-rqt-tf-tree -y && \
 sudo apt install ros-jazzy-foxglove-bridge -y && \
 sudo apt-get install libqt5serialport5-dev'
 
-# Foxglove WebSocketサーバー（実機・シミュレーション共通、Siriusの8765と分離）
+# 実機ROS Domain用Foxglove WebSocketサーバー（Siriusの8765と分離）
 alias koko_foxglove='koko_src && bash "${HOME}/robotbase_ws/bash/startup_bash/foxglove_server.sh"'
+
+# シミュレーションROS Domainを見るFoxgloveサーバー（実機用とは同時起動しない）。
+alias koko_foxglove_sim='koko_sim_src && bash "${HOME}/robotbase_ws/bash/startup_bash/foxglove_server.sh"'
 
 # Behavior Tree 可視化ツール Groot2 起動
 alias koko_groot2='$HOME/Groot2/groot2.sh'

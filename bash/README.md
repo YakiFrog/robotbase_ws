@@ -16,13 +16,16 @@ source ~/robotbase_ws/bash/bash_alias2.sh
 主なコマンド:
 
 ```bash
-koko_src       # robotbase_ws + ROS_DOMAIN_ID=57
+koko_src       # 実機: robotbase_ws + ROS_DOMAIN_ID=57
+koko_sim_src   # シミュレーション: robotbase_ws + ROS_DOMAIN_ID=58
 koko_build
 koko_sim
 koko_rviz_sim
 koko_slamtoolbox_sim
 koko_nav2_sim_map
 koko_nav2_sim_slam
+koko_keyop2_sim
+koko_map_save_sim
 koko_slamtoolbox_real
 koko_nav2_real
 koko_nav2_real_slam

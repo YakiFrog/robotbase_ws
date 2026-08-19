@@ -54,10 +54,21 @@ class TestTabSelection(unittest.TestCase):
         self.assertIn('koko_slamtoolbox_sim', simulation_names)
         self.assertIn('koko_nav2_sim_map', simulation_names)
         self.assertIn('koko_nav2_sim_slam', simulation_names)
+        self.assertIn('koko_keyop2_sim', simulation_names)
+        self.assertIn('koko_map_save_sim', simulation_names)
         self.assertNotIn('koko_twist_mux', simulation_names)
         self.assertIn('koko_twist_mux', real_names)
         self.assertIn('koko_nav2_real_slam', real_names)
         self.assertIn('koko_foxglove', utility_names)
+        self.assertIn('koko_foxglove_sim', utility_names)
+
+        simulation_commands = {
+            name: command for name, command, _description in groups['シミュレーション']
+        }
+        for command in simulation_commands.values():
+            self.assertIn('activate_koko_sim_env.sh', command)
+            self.assertNotIn('koko_sim_src', command)
+            self.assertNotIn('koko_sim_env &&', command)
 
         preset_names = [name for name, _ in presets]
         self.assertIn('自律移動（シミュレーション）', preset_names)

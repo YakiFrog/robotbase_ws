@@ -10,6 +10,6 @@ Nav2・SLAM Toolbox・twist_muxは、差分を直接比較して個別に調整�
 
 Nav2のローカルコントローラは実機・シミュレーションともMPPIを使用する。ココちゃんの長方形footprint全体で障害物との衝突を評価するため、`CostCritic.consider_footprint`を有効にしている。
 
-実機用だけは、モータが反応しない前後速度`0.10 m/s`未満をMPPIの`VelocityDeadbandCritic`、controllerのodom閾値、velocity smootherのdeadbandへ設定している。角速度の不感帯は実測値が得られるまで0とする。
+実機用は、モータが反応しない前後速度`0.10 m/s`未満をMPPIの`VelocityDeadbandCritic`、controllerのodom閾値、velocity smootherのdeadbandへ設定している。シミュレーション用も低速停滞を避けるため、MPPI Criticを0.12 m/s、odom閾値とsmootherを0.10 m/sとし、`sim/keyop.yaml`の直進刻みを0.20 m/sにする。角速度の不感帯は実測値が得られるまで0とする。
 
 通常はlaunchの既定値でこのフォルダが使われる。別ファイルを試す場合は、各launchへ `params_file:=...` または `slam_config_file:=...` を渡す。

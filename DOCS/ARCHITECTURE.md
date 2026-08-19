@@ -76,6 +76,8 @@ idle --------> /cmd_vel_idle ---- priority   1 --+
 
 ## シミュレーション
 
+シミュレーション系alias/UIは`ROS_DOMAIN_ID=58`、実機系は57を使用する。これによりGazeboの`/clock`が実機ノードや別PCのシミュレータと混在しない。
+
 ```text
 koko_sim
   Gazebo + robot_state_publisher + VLP-16 + IMU + twist_mux

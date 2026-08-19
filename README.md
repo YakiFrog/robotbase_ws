@@ -2,9 +2,9 @@
 
 SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動二輪ロボット向けに調整している ROS 2 Jazzy ワークスペースです。車輪径、トレッド幅、エンコーダ、車体寸法、センサー構成がSIRIUSと異なります。
 
-新機体の仮称は「ココちゃん」です。表示名、ROS Domain、Gazebo識別子は [`robot.env`](robot.env) で変更できます。この開発PC上のSIRIUSと競合しないよう、Bashコマンドは `koko_*`、ROSはDomain 57、Gazeboはpartition `koko`へ分離しています。
+新機体の仮称は「ココちゃん」です。表示名、ROS Domain、Gazebo識別子は [`robot.env`](robot.env) で変更できます。この開発PC上のSIRIUSと競合しないよう、Bashコマンドは `koko_*`、ROSは実機Domain 57・シミュレーションDomain 58、Gazeboはpartition `koko`へ分離しています。
 
-Foxglove Bridgeは実機・シミュレーション共通で `koko_foxglove` から起動できます。Siriusの既定ポート8765と競合しないよう、ココちゃんは8766を使います。
+Foxglove Bridgeは実機では `koko_foxglove`、シミュレーションでは `koko_foxglove_sim` から起動できます。Siriusの既定ポート8765と競合しないよう、ココちゃんは8766を使います。
 
 ## 現在の状況（2026-08-19）
 
@@ -42,9 +42,15 @@ koko_rviz_sim
 koko_slamtoolbox_sim
 koko_nav2_sim_map
 koko_nav2_sim_slam
+
+# 必要な場合は別端末
+koko_keyop2_sim
+koko_map_save_sim
 ```
 
 `koko_nav2_sim_map` は同梱・保存済み地図を端末の一覧から選択し、AMCLを起動します。RVizの `2D Pose Estimate` で初期姿勢を指定できます。`koko_nav2_sim_slam` は地図なしでSLAM ToolboxとNav2を同時に使います。GazeboとRVizはどちらのモードでも別起動です。`twist_mux` は `koko_sim` に含まれるため、シミュレーションで別起動する必要はありません。
+
+実機ROS graphはDomain 57、シミュレーションはDomain 58に分離しています。`koko_*_sim`コマンドは自動的に58を選ぶため、実機や別PCの`/clock`がRVizへ混入しません。Gazeboを再起動するときは先に旧RViz・Nav2・SLAM端末も終了してください。`koko_sim`は二重起動や残存ノードを検出すると、安全のため起動を拒否します。
 
 ## 速度指令の経路
 

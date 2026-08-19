@@ -6,6 +6,8 @@ from pathlib import Path
 
 from robot_config import (
     ENV_ALIAS,
+    SIM_ENV_ALIAS,
+    SIM_SOURCE_ALIAS,
     SOURCE_ALIAS,
 )
 
@@ -77,17 +79,29 @@ def parse_bash_aliases(alias_file_path):
                         i += 1
                         continue
 
-                    # The GUI is independent of ~/.bashrc. Expand the two
-                    # robot-specific helper aliases into explicit commands.
+                    # The GUI is independent of ~/.bashrc. Expand real and
+                    # simulation helper aliases into explicit commands.
                     ws_dir = Path(alias_file_path).resolve().parent.parent
                     setup_bash = ws_dir / 'install' / 'setup.bash'
                     activate_script = ws_dir / 'bash' / 'activate_koko_env.sh'
+                    activate_sim_script = ws_dir / 'bash' / 'activate_koko_sim_env.sh'
                     env_command = f'source {shlex.quote(str(activate_script))}'
+                    sim_env_command = f'source {shlex.quote(str(activate_sim_script))}'
                     source_command = (
                         f'{env_command} && cd {shlex.quote(str(ws_dir))} && '
                         f'source {shlex.quote(str(setup_bash))}'
                     )
-                    if command.startswith(f'{SOURCE_ALIAS} && '):
+                    sim_source_command = (
+                        f'{sim_env_command} && cd {shlex.quote(str(ws_dir))} && '
+                        f'source {shlex.quote(str(setup_bash))}'
+                    )
+                    if command.startswith(f'{SIM_SOURCE_ALIAS} && '):
+                        command = command.replace(
+                            f'{SIM_SOURCE_ALIAS} && ', f'{sim_source_command} && ', 1)
+                    elif command.startswith(f'{SIM_ENV_ALIAS} && '):
+                        command = command.replace(
+                            f'{SIM_ENV_ALIAS} && ', f'{sim_env_command} && ', 1)
+                    elif command.startswith(f'{SOURCE_ALIAS} && '):
                         command = command.replace(
                             f'{SOURCE_ALIAS} && ', f'{source_command} && ', 1)
                     elif command.startswith(f'{ENV_ALIAS} && '):
