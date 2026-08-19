@@ -17,6 +17,7 @@
 | Velodyne VLP-16 | `params/real/velodyne.yaml`、`VLP16db.yaml` |
 | シミュレーション点群変換・停止速度 | `params/sim/velodyne_laserscan.yaml`、`idle_twist.yaml` |
 | キーボード手動操作（共通） | `params/common/keyop.yaml` |
+| Foxglove Bridge（共通） | `params/common/foxglove.yaml`、待受先は`robot.env` |
 | Gazeboモデル | `src/robotbase_sim/models/robotbase.sdf` |
 | 実機Nav2地図選択 | `bash/startup_bash/nav2_bringup_real.sh` |
 
@@ -32,6 +33,8 @@ ROBOTBASE_ID="koko"
 ROBOTBASE_ROS_DOMAIN_ID="57"
 ROBOTBASE_GZ_PARTITION="koko"
 ROBOTBASE_TF_PREFIX="robot"
+ROBOTBASE_FOXGLOVE_ADDRESS="0.0.0.0"
+ROBOTBASE_FOXGLOVE_PORT="8766"
 ```
 
 alias経由では `ROBOTBASE_PARAMS_DIR=~/robotbase_ws/params` も設定される。直接launchした場合も同じ場所を既定値として使う。

@@ -4,6 +4,8 @@ SIRIUS用の [`sirius_jazzy_ws`](../sirius_jazzy_ws) を基に、新しい差動
 
 新機体の仮称は「ココちゃん」です。表示名、ROS Domain、Gazebo識別子は [`robot.env`](robot.env) で変更できます。この開発PC上のSIRIUSと競合しないよう、Bashコマンドは `koko_*`、ROSはDomain 57、Gazeboはpartition `koko`へ分離しています。
 
+Foxglove Bridgeは実機・シミュレーション共通で `koko_foxglove` から起動できます。Siriusの既定ポート8765と競合しないよう、ココちゃんは8766を使います。
+
 ## 現在の状況（2026-08-19）
 
 - 実機の手動操作: 動作確認済み
@@ -98,6 +100,7 @@ koko_nav2_real     # 地図を選択してNav2のみ起動
 koko_nav2_real_slam # 地図を生成・更新しながらNav2を起動
 koko_rviz_real     # RVizのみ
 koko_keyop2        # 必要な場合のみ
+koko_foxglove      # 必要な場合のみ。Foxglove WebSocketサーバー
 ```
 
 `koko_nav2_real_slam` はmap serverとAMCLを起動せず、SLAM Toolboxが `/map` と `map -> robot/odom` を供給します。地図を残す場合は走行後に `koko_map_save` を実行します。
@@ -137,7 +140,7 @@ Failed to make progress
 |---|---|
 | `params/real/` | 実機用Nav2・SLAM・twist_mux・Roboteq・IMU・EKF・Velodyne設定 |
 | `params/sim/` | シミュレーション用Nav2・SLAM・twist_mux・点群変換設定 |
-| `params/common/` | 実機・シミュレーション共通のキーボード操作設定 |
+| `params/common/` | 実機・シミュレーション共通のキーボード操作・Foxglove設定 |
 | `src/robotbase_bringup/` | ココちゃん専用URDF、RViz、実機起動launch |
 | `src/robotbase_sim/` | Gazebo SimとVLP-16/IMUの模擬センサー |
 | `src/robotbase_keyop/` | 実機・シミュレーション共通のキーボード手動操作 |
@@ -162,6 +165,7 @@ Failed to make progress
 - [設定の正本と既知の課題](DOCS/CONFIGURATION.md)
 - [Gazeboシミュレータの構成と使い方](DOCS/SIMULATION.md)
 - [ココちゃんBash・ランチャー・通信分離](DOCS/LAUNCHER.md)
+- [Foxglove Bridgeの接続と設定](DOCS/FOXGLOVE.md)
 
 ## ビルド
 

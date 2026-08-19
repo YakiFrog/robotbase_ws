@@ -49,6 +49,7 @@ class TestTabSelection(unittest.TestCase):
         groups, presets = parse_bash_aliases(ALIAS_FILE)
         simulation_names = [item[0] for item in groups['シミュレーション']]
         real_names = [item[0] for item in groups['リアル実験']]
+        utility_names = [item[0] for item in groups['ユーティリティ']]
 
         self.assertIn('koko_slamtoolbox_sim', simulation_names)
         self.assertIn('koko_nav2_sim_map', simulation_names)
@@ -56,6 +57,7 @@ class TestTabSelection(unittest.TestCase):
         self.assertNotIn('koko_twist_mux', simulation_names)
         self.assertIn('koko_twist_mux', real_names)
         self.assertIn('koko_nav2_real_slam', real_names)
+        self.assertIn('koko_foxglove', utility_names)
 
         preset_names = [name for name, _ in presets]
         self.assertIn('自律移動（シミュレーション）', preset_names)

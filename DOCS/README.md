@@ -11,6 +11,7 @@
 5. [CONFIGURATION.md](CONFIGURATION.md) — 設定の正本と既知の不整合を確認する
 6. [SIMULATION.md](SIMULATION.md) — 実機なしで地図生成・Nav2走行を試す
 7. [LAUNCHER.md](LAUNCHER.md) — ココちゃん用Bash、UI、SIRIUSとの分離設定
+8. [FOXGLOVE.md](FOXGLOVE.md) — Foxglove Bridgeの接続、ポート分離、公開権限
 
 ## AIへ調査を依頼するとき
 

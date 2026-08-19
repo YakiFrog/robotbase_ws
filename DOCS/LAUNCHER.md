@@ -14,6 +14,8 @@ ROBOTBASE_ID="koko"
 ROBOTBASE_ROS_DOMAIN_ID="57"
 ROBOTBASE_GZ_PARTITION="koko"
 ROBOTBASE_TF_PREFIX="robot"
+ROBOTBASE_FOXGLOVE_ADDRESS="0.0.0.0"
+ROBOTBASE_FOXGLOVE_PORT="8766"
 ```
 
 - `ROBOTBASE_DISPLAY_NAME`: UI、ターミナルタイトル、デスクトップ表示名
@@ -21,6 +23,7 @@ ROBOTBASE_TF_PREFIX="robot"
 - `ROBOTBASE_ROS_DOMAIN_ID`: ココちゃん専用ROS 2 Domain
 - `ROBOTBASE_GZ_PARTITION`: Gazebo Transportの分離名
 - `ROBOTBASE_TF_PREFIX`: TF接頭辞。Gazebo、driver、Nav2、SLAM、RVizへ反映
+- `ROBOTBASE_FOXGLOVE_ADDRESS` / `ROBOTBASE_FOXGLOVE_PORT`: Foxgloveの待受先。Siriusの8765と分離
 
 正式名称が決まったときは、通常 `ROBOTBASE_DISPLAY_NAME` だけを変更します。その後ランチャーを再起動し、次を実行してください。
 
@@ -56,6 +59,7 @@ source ~/robotbase_ws/bash/bash_alias2.sh
 | `koko_nav2_real` | 新機体の実機Nav2 |
 | `koko_nav2_real_slam` | 実機で地図を生成・更新しながらNav2を実行 |
 | `koko_rviz_real` | 実機用RViz単体 |
+| `koko_foxglove` | 実機・シミュレーション共通Foxglove Bridge（8766） |
 | `koko_launcher` | GUIランチャー |
 
 aliasファイルをsourceしただけでは、SIRIUS端末のDomain 56を変更しません。`koko_src`または`koko_env`が実行された時点で、そのターミナルはDomain 57になります。同じターミナルでSIRIUSへ戻る場合は新しいターミナルを開くのが安全です。
@@ -88,7 +92,7 @@ ROBOTBASE_TF_PREFIX=robot
 Terminator tab: [ココちゃん] <alias>
 ```
 
-UIは5タブです。Gazebo、RViz、シミュレーション地図作成、2種類のシミュレーションNav2は「シミュレーション」タブに集約しています。実機用 `twist_mux` と `koko_nav2_real_slam` は「リアル実験」タブです。外部連携、LLM、ZED/SAM3関連ボタンはありません。
+UIは5タブです。Gazebo、RViz、シミュレーション地図作成、2種類のシミュレーションNav2は「シミュレーション」タブに集約しています。実機用 `twist_mux` と `koko_nav2_real_slam` は「リアル実験」タブです。`koko_foxglove` は「ユーティリティ」タブにあります。外部連携タブ、LLM、ZED/SAM3関連ボタンはありません。
 
 `koko_rviz_sim` と `koko_rviz_real` は `rviz/robotbase_<TF接頭辞>.rviz` を読み込む。RVizの通常の `File -> Save Config` で保存した表示構成は、次回の起動でもそのまま使われる。
 

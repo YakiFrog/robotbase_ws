@@ -78,6 +78,7 @@ sudo apt install -y \
   python3-colcon-common-extensions \
   python3-rosdep \
   libqt5serialport5-dev \
+  ros-jazzy-foxglove-bridge \
   xterm
 
 sudo rosdep init 2>/dev/null || true
@@ -89,7 +90,7 @@ source /opt/ros/jazzy/setup.bash
 rosdep install --from-paths src --ignore-src -r -y
 ```
 
-現在の開発PCでは `rosdep check --from-paths src --ignore-src` が成功している。
+`ros-jazzy-foxglove-bridge` を含む上記依存を導入した後、`rosdep check --from-paths src --ignore-src` が成功することを確認する。この開発PCではFoxglove追加前の依存確認は成功済みだが、Foxglove本体の導入だけsudo実行待ち。
 
 ## 3. ビルド
 
@@ -110,7 +111,7 @@ source install/setup.bash
 ```bash
 for package in \
   robotbase_bringup robotbase_keyop robotbase_sim \
-  roboteq_ros2_driver witmotion_ros velodyne_driver; do
+  roboteq_ros2_driver witmotion_ros velodyne_driver foxglove_bridge; do
   ros2 pkg prefix "$package"
 done
 ```

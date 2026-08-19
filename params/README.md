@@ -4,7 +4,7 @@
 
 - `real/`: 実機用。Nav2、SLAM Toolbox、twist_mux、Roboteq、IMU、EKF、Velodyne。
 - `sim/`: Gazebo用。Nav2、SLAM Toolbox、twist_mux、点群からLaserScanへの変換、停止時のゼロ速度発行。
-- `common/`: 実機・シミュレーション共通。現在はキーボード手動操作。
+- `common/`: 実機・シミュレーション共通。キーボード手動操作とFoxglove Bridge。
 
 Nav2・SLAM Toolbox・twist_muxは、差分を直接比較して個別に調整できるよう実機用とシミュレーション用を別ファイルにしている。
 

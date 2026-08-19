@@ -67,6 +67,7 @@ koko_rviz_real
 koko_slamtoolbox_real # 地図生成時
 koko_nav2_real        # 自律移動時
 koko_nav2_real_slam   # 地図を生成・更新しながら自律移動
+koko_foxglove         # 共通Foxgloveサーバー、ws://PC_IP:8766
 ```
 
 GazeboとRVizは別プロセス。`koko_nav2_sim_slam` と `koko_nav2_real_slam` はSLAMとNav2を同時起動する。シミュレーションの `twist_mux` は `koko_sim` に含まれるが、実機では `koko_twist_mux` を別途起動する。
@@ -106,7 +107,7 @@ ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
 - Hokuyo、`/scan3`、`/hokuyo_scan`
 - LLM dynamic goal、status monitor、BLE gateway
 - semantic costmap、STVL
-- 外部連携タブ
+- 外部連携タブ（Foxgloveは依頼によりユーティリティへ個別追加）
 
 上流または移植元ソースが `src/sirius/` に残っていても、新しいbringupから参照しない。
 

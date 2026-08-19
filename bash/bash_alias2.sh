@@ -56,7 +56,11 @@ alias koko_nav2_sim_slam='koko_src && ros2 launch robotbase_sim navigation_slam.
 
 alias koko_install_packages='sudo apt update && sudo apt install xterm -y && \
 sudo apt install ros-jazzy-rqt-tf-tree -y && \
+sudo apt install ros-jazzy-foxglove-bridge -y && \
 sudo apt-get install libqt5serialport5-dev'
+
+# Foxglove WebSocketサーバー（実機・シミュレーション共通、Siriusの8765と分離）
+alias koko_foxglove='koko_src && bash "${HOME}/robotbase_ws/bash/startup_bash/foxglove_server.sh"'
 
 # Behavior Tree 可視化ツール Groot2 起動
 alias koko_groot2='$HOME/Groot2/groot2.sh'
