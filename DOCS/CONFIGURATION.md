@@ -69,23 +69,32 @@ map
 
 | 項目 | 値 |
 |---|---:|
-| controller | DWB / DiffDrive |
+| controller | MPPI / DiffDrive |
 | controller frequency | 10 Hz |
+| prediction horizon | 2.8秒（`28 x 0.10`秒） |
 | `use_realtime_priority` | `false` |
 | 最大前進速度 | 0.90 m/s |
 | 最大後退速度 | -0.30 m/s |
 | 最大角速度 | 0.90 rad/s |
+| 実機の前後速度不感帯 | 0.10 m/s（MPPI評価・odom判定・velocity smoother） |
 | footprint | 前0.425、後0.475、左右0.33 m（全長0.90 x 全幅0.66 m） |
 | local costmap | 6 x 6 m、0.05 m/cell |
 | obstacle source | `/scan3` のみ |
 | scan obstacle height | 0.0〜2.0 m（source単位で明示） |
-| 後退 | `min_vel_x: -0.30`で脱出用に許可、`PreferForward` criticで通常走行は前進優先 |
+| 後退 | `vx_min: -0.30`で脱出用に許可、`PreferForwardCritic`で通常走行は前進優先 |
+| 衝突評価 | `CostCritic.consider_footprint: true`で長方形footprint全体を評価 |
 
 ZED、SAM3、Hokuyo、semantic layer、STVLは含まない。VLP-16点群は `velodyne_laserscan` により複数リング合成 `/scan3` へ変換して使う。単一リング `/scan` も配信されるが、Nav2とSLAM Toolboxの入力には使わない。
 
 Nav2 JazzyのObstacleLayerは、plugin全体とは別に観測source `scan.max_obstacle_height` を持ち、未指定時は `0.0` mになる。これをglobal/local costmapの両方で `2.0` mへ明示している。未指定に戻すと、床より高いVLP-16由来のLaserScan点が全件破棄され、local costmapが全セル0になる。
 
-DWBの `PreferForward` は、後退軌道に `scale 20 x penalty 5 = 100` の固定コストを加える。`theta_scale: 0.0` としているため、後方のゴールに対しては後退するより、その場で向き直って前進する軌道を選びやすい。`min_vel_x: -0.30` は維持しているので、前進軌道が障害物等で成立しない場合やRecoveryのbackupでは後退できる。
+MPPIの予測時間は2.8秒とする。最大速度0.9 m/sでの予測移動量は2.52 mで、半径3 mのlocal costmap内に車体外形まで収まる。旧6秒設定は5.4 m先まで予測しようとしてcostmap外へ達し、空き領域で低速周回する原因になっていた。
+
+`PreferForwardCritic.cost_weight: 40.0`で、通常走行では後退より向き直って前進する軌道を強く優先する。`vx_min: -0.30`は維持しているため、前進軌道が成立しない場合やRecoveryのbackupでは後退できる。シミュレーションの後方ゴール試験で最大後退を約`-0.027 m/s`まで抑えた。
+
+障害物は`CostCritic.cost_weight: 4.0`、`consider_footprint: true`、`collision_cost: 1000000.0`で評価する。旧weight 10はinflation領域へ入るコストが強すぎ、経路より空き領域の周回を選びやすかった。重みを下げても、長方形footprintが接触する軌道には100万コストが付くため、衝突禁止判定は維持される。
+
+実機は前後速度の絶対値が`0.10 m/s`未満では動かない前提とする。実機用MPPIだけに`VelocityDeadbandCritic`を追加して微小速度の軌道へコストを付け、`controller_server.min_x_velocity_threshold: 0.10`で同範囲のodomを停止として扱う。さらに`velocity_smoother.deadband_velocity: [0.10, 0.0, 0.0]`で、加減速途中や停止直前の無効な前後指令を0へ丸める。シミュレーション用は物理モデルとの比較を崩さないため0のままにしている。角速度の不感帯は未計測なので設定していない。
 
 ## SLAM Toolbox
 
@@ -126,7 +135,7 @@ Nav2とtwist_muxは別コマンドである。実機Nav2試験では `koko_twist
 - `params/ekf_fusion.yaml`、`imu_filter.yaml`、`keepout_params.yaml`
 - ZED/SAM3/RTAB-MAP起動スクリプト
 - semantic/STVL、Hokuyo、docking、loopbackのパラメータ
-- MPPI走行モード切替スクリプト
+- 旧MPPI走行モード切替スクリプト（現在は標準設定がMPPI）
 
 `src/robotbase_bringup/config/` の複製も廃止し、`params/` だけを正本にした。実機とシミュレーションの差分確認例:
 

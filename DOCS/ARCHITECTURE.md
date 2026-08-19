@@ -49,7 +49,7 @@ TF責務:
 RViz / NavigateToPose
   -> bt_navigator
   -> planner_server (NavFn)
-  -> controller_server (DWB, DiffDrive) /cmd_vel_nav
+  -> controller_server (MPPI, DiffDrive) /cmd_vel_nav
   -> velocity_smoother                /cmd_vel_smoothed
   -> twist_mux                         /cmd_vel
   -> roboteq_ros2_driver
@@ -127,7 +127,7 @@ koko_rviz_real
 | センサー | 複数LiDAR/カメラ構成 | VLP-16 + IMU |
 | LaserScan | `scan3`等 | `/scan3` |
 | TF prefix | `sirius3` | `robot`（設定可能） |
-| controller | MPPI中心 | DWB最小構成 |
+| controller | MPPI | MPPI（ココちゃんのfootprint・速度制限を使用） |
 
 ZED、SAM3、RTAB-MAP、Hokuyo、semantic costmap、STVLはココちゃんの有効な起動経路に含まない。
 

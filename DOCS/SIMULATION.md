@@ -21,9 +21,15 @@
 | Nav2 | 管理ノードすべて `active`。AMCLも`active` |
 | `2D Pose Estimate` | `/initialpose`のAMCL購読と、指定値への`/amcl_pose`更新を確認 |
 | Local Costmap | 120 x 120セル、約1.67 Hz。障害物・inflationの非ゼロセルを確認 |
-| 自律走行（static試験モード） | `(0, 0)`から障害物を迂回して`(4, 0)`へ到達、`SUCCEEDED` |
-| 到着姿勢 | 新しいDWB設定でodom位置 `(3.841, -0.164)`（許容半径0.25 m内） |
+| DWB時点の障害物迂回試験 | `(0, 0)`から`(4, 0)`へ到達、`SUCCEEDED` |
+| MPPI短距離試験 | `(0, 0)`から`(1, 0)`へ移動し、`NavigateToPose: SUCCEEDED`を確認 |
+| MPPI障害物迂回試験 | `(0, 0) → (4, 0)`、`(-4, 0) → (4, 0)`、`(4, 0) → (-4, 0)`がすべて`SUCCEEDED` |
+| MPPI前進優先試験 | `PreferForwardCritic: 40`で長距離往路の負速度0件、後方ゴールで最大`-0.027 m/s` |
+| MPPI障害物離隔 | 長距離迂回中、車体footprintから主要障害物まで最小約0.29 m（シミュレーション形状から算出） |
+| DWB時点の参考記録 | odom位置 `(3.841, -0.164)`へ到着（許容半径0.25 m内） |
 | 停止 | 完了後の `/cmd_vel` がゼロ |
+
+GazeboのDiffDriveはモデル生成後に`/model/<tf_prefix>/enable`へ`true`を自動送信する。GUIの操作有無に依存せず、headless起動でもNav2の速度指令を受け付ける。
 
 ## 初回ビルド
 

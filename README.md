@@ -74,7 +74,9 @@ Nav2 controller_server
 | Nav2フットプリント | 前0.425 m、後0.475 m、左右0.33 m（全長0.90 x 全幅0.66 m） |
 | Nav2最大前進速度 | 0.90 m/s |
 | Nav2最大角速度 | 0.90 rad/s |
-| 後退方針 | 後退可能、DWB `PreferForward`で前進を強く優先 |
+| 実機の前後速度不感帯 | 0.10 m/s（MPPI・odom判定・速度平滑化へ反映） |
+| Nav2 controller | MPPI (`DiffDrive`、2.8秒予測、footprint全体を衝突評価) |
+| 後退方針 | 後退可能、MPPI `PreferForwardCritic`で前進を優先 |
 | Nav2入力LaserScan | `/scan3` |
 | 制御用オドメトリ | `/odom/filtered` |
 

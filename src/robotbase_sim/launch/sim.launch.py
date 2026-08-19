@@ -147,6 +147,18 @@ def generate_launch_description():
         parameters=[idle_twist_params_file],
     )
 
+    # Gazebo DiffDriveはモデル生成直後に明示的に有効化する。
+    # GUI操作の有無に依存させず、headless試験でも速度指令を受け付ける。
+    enable_diff_drive = ExecuteProcess(
+        cmd=[
+            'gz', 'topic',
+            '-t', PathJoinSubstitution(['/model', tf_prefix, 'enable']),
+            '-m', 'gz.msgs.Boolean',
+            '-p', 'data: true',
+        ],
+        output='screen',
+    )
+
     return LaunchDescription([
         SetEnvironmentVariable('GZ_PARTITION', session_partition),
         LogInfo(msg=f'Gazebo session partition: {session_partition}'),
@@ -168,4 +180,5 @@ def generate_launch_description():
         robot_state_publisher,
         TimerAction(period=1.5, actions=[spawn_robot]),
         TimerAction(period=2.0, actions=[bridge, vlp16_to_scan, twist_mux, idle_twist]),
+        TimerAction(period=3.0, actions=[enable_diff_drive]),
     ])

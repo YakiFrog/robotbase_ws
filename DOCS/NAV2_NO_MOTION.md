@@ -165,7 +165,7 @@ ros2 topic echo /cmd_vel
 | navは出るがsmoothedが無い | velocity smootherが非active、型/QoS/input不一致 | lifecycle、`node info` |
 | smoothedは出るが`/cmd_vel`が無い | mux未起動、lock、別設定を読んでいる | mux node、`/stop`、package prefix |
 | `/cmd_vel`が非ゼロだが動かない | driver以降 | Roboteq subscriber、非常停止、motor command |
-| 全段がゼロ | controllerが有効軌道を選べていない | local costmap、scan、TF、DWBログ |
+| 全段がゼロ | controllerが有効軌道を選べていない | local costmap、scan、TF、MPPIログ |
 
 手動走行と`keyop2`が既に成功しているため、`/cmd_vel`以降の故障可能性は低い。特に`keyop2`は `/cmd_vel_teleop -> twist_mux -> /cmd_vel` を通るので、同じ試験時に成功したならmuxとRoboteqの後半は正常と推定できる。
 
@@ -224,21 +224,21 @@ VLP-16 driverと改造版 `velodyne_laserscan` が、複数リングを距離制
 - inflation radius 0.70 m
 - footprint 0.90 x 0.66 m
 
-`scan.max_obstacle_height` は観測source内に必要で、未指定時の既定値は0.0 m。VLP-16の取付高さが0 mより上の場合、これがないとスキャン点が全件除外され、配信トピックが存在してもlocal costmapは全セル0になる。反対に、センサー自己点、誤TF、地面反射でロボット周囲がlethalになるとDWBは有効軌道を出せない。
+`scan.max_obstacle_height` は観測source内に必要で、未指定時の既定値は0.0 m。VLP-16の取付高さが0 mより上の場合、これがないとスキャン点が全件除外され、配信トピックが存在してもlocal costmapは全セル0になる。反対に、センサー自己点、誤TF、地面反射でロボット周囲がlethalになるとMPPIは有効軌道を出せない。
 
 RVizで次を同時表示する。
 
 - Local Costmap
 - Local Footprint
 - LaserScan `/scan3`
-- DWB trajectories（必要時）
+- MPPI optimal trajectoryとcandidate trajectories（必要時）
 - RobotModelとTF
 
 Nav2端末では次を探す。
 
 ```text
-No valid trajectories out of 0!
-Unable to find a valid trajectory
+No valid trajectories
+No valid control
 Costmap timed out
 Sensor origin ... out of map bounds
 Message Filter dropping message
