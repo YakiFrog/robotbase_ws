@@ -25,6 +25,7 @@ koko_nav2_sim_map
 koko_nav2_sim_slam
 koko_slamtoolbox_real
 koko_nav2_real
+koko_nav2_real_slam
 koko_rviz_real
 koko_launcher
 ```

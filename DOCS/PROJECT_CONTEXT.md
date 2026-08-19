@@ -66,9 +66,10 @@ koko_twist_mux
 koko_rviz_real
 koko_slamtoolbox_real # 地図生成時
 koko_nav2_real        # 自律移動時
+koko_nav2_real_slam   # 地図を生成・更新しながら自律移動
 ```
 
-GazeboとRVizは別プロセス。`koko_nav2_sim_slam` だけはSLAMとNav2を同時起動する。シミュレーションの `twist_mux` は `koko_sim` に含まれる。
+GazeboとRVizは別プロセス。`koko_nav2_sim_slam` と `koko_nav2_real_slam` はSLAMとNav2を同時起動する。シミュレーションの `twist_mux` は `koko_sim` に含まれるが、実機では `koko_twist_mux` を別途起動する。
 
 ## 速度指令
 

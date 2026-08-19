@@ -16,6 +16,9 @@ unalias koko_nav2_sim 2>/dev/null || true
 # PRESET: SLAMしながら自律移動（シミュレーション）
 # PRESET_ITEMS: koko_sim,koko_nav2_sim_slam,koko_rviz_sim
 
+# PRESET: SLAMしながら自律移動（実機）
+# PRESET_ITEMS: koko_roboteq,koko_velodyne,koko_imu,koko_sf_real,koko_twist_mux,koko_nav2_real_slam,koko_rviz_real
+
 # TAB: センサー・ハードウェア
 # GROUP: センサー・ハードウェア
 
@@ -85,6 +88,9 @@ alias koko_nav2_real='koko_env && bash ~/robotbase_ws/bash/startup_bash/nav2_bri
 
 # SLAMToolbox起動(実時間)
 alias koko_slamtoolbox_real='koko_src && ros2 launch robotbase_bringup slam.launch.py use_sim_time:=false tf_prefix:=${ROBOTBASE_TF_PREFIX}'
+
+# 地図を生成・更新しながらNav2を実行（実時間、map server / AMCLなし）
+alias koko_nav2_real_slam='koko_src && ros2 launch robotbase_bringup navigation_slam.launch.py tf_prefix:=${ROBOTBASE_TF_PREFIX}'
 
 # Sensor Fusion起動(実時間)
 alias koko_sf_real='koko_src && ros2 launch robotbase_bringup sensor_fusion.launch.py use_sim_time:=false tf_prefix:=${ROBOTBASE_TF_PREFIX}'

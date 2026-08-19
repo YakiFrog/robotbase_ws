@@ -95,11 +95,14 @@ koko_imu           # IMU
 koko_sf_real       # /odom + /imu -> /odom/filtered、odom TF
 koko_twist_mux     # Nav2/keyop2の速度指令を /cmd_vel に統合
 koko_nav2_real     # 地図を選択してNav2のみ起動
+koko_nav2_real_slam # 地図を生成・更新しながらNav2を起動
 koko_rviz_real     # RVizのみ
 koko_keyop2        # 必要な場合のみ
 ```
 
-ランチャーの「実機基本」プリセットはRoboteq、VLP-16、IMU、EKF、twist_muxを起動します。Nav2とRVizは個別起動です。
+`koko_nav2_real_slam` はmap serverとAMCLを起動せず、SLAM Toolboxが `/map` と `map -> robot/odom` を供給します。地図を残す場合は走行後に `koko_map_save` を実行します。
+
+ランチャーの「実機基本」プリセットはRoboteq、VLP-16、IMU、EKF、twist_muxを起動します。「SLAMしながら自律移動（実機）」プリセットは、それらに `koko_nav2_real_slam` とRVizを加えてまとめて起動します。
 
 ## 最短の実機診断
 

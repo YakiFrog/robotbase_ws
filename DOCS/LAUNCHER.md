@@ -54,6 +54,7 @@ source ~/robotbase_ws/bash/bash_alias2.sh
 | `koko_keyop2` | 新機体の手動操作 |
 | `koko_slamtoolbox_real` | 実機SLAM単体 |
 | `koko_nav2_real` | 新機体の実機Nav2 |
+| `koko_nav2_real_slam` | 実機で地図を生成・更新しながらNav2を実行 |
 | `koko_rviz_real` | 実機用RViz単体 |
 | `koko_launcher` | GUIランチャー |
 
@@ -87,7 +88,7 @@ ROBOTBASE_TF_PREFIX=robot
 Terminator tab: [ココちゃん] <alias>
 ```
 
-UIは5タブです。Gazebo、RViz、シミュレーション地図作成、2種類のシミュレーションNav2は「シミュレーション」タブに集約しています。実機用 `twist_mux` は「リアル実験」タブです。外部連携、LLM、ZED/SAM3関連ボタンはありません。
+UIは5タブです。Gazebo、RViz、シミュレーション地図作成、2種類のシミュレーションNav2は「シミュレーション」タブに集約しています。実機用 `twist_mux` と `koko_nav2_real_slam` は「リアル実験」タブです。外部連携、LLM、ZED/SAM3関連ボタンはありません。
 
 `koko_rviz_sim` と `koko_rviz_real` は `rviz/robotbase_<TF接頭辞>.rviz` を読み込む。RVizの通常の `File -> Save Config` で保存した表示構成は、次回の起動でもそのまま使われる。
 

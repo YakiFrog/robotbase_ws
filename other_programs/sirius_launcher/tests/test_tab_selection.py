@@ -55,10 +55,12 @@ class TestTabSelection(unittest.TestCase):
         self.assertIn('koko_nav2_sim_slam', simulation_names)
         self.assertNotIn('koko_twist_mux', simulation_names)
         self.assertIn('koko_twist_mux', real_names)
+        self.assertIn('koko_nav2_real_slam', real_names)
 
         preset_names = [name for name, _ in presets]
         self.assertIn('自律移動（シミュレーション）', preset_names)
         self.assertIn('SLAMしながら自律移動（シミュレーション）', preset_names)
+        self.assertIn('SLAMしながら自律移動（実機）', preset_names)
 
 
 if __name__ == '__main__':

@@ -278,11 +278,21 @@ koko_map_save
 
 ### 9.4 Nav2
 
+保存済み地図とAMCLを使う場合:
+
 ```bash
 koko_nav2_real
 ```
 
 地図を選び、RVizで初期姿勢を合わせてから近距離ゴールを送る。ゴール中は別ターミナルで確認する。
+
+地図を生成・更新しながらNav2を使う場合:
+
+```bash
+koko_nav2_real_slam
+```
+
+このモードではSLAM Toolboxが `/map` と `map -> robot/odom` を供給するため、map serverとAMCLは起動しない。`/map` が配信されてから近距離ゴールを送り、必要な地図は別ターミナルの `koko_map_save` で保存する。どちらのNav2モードでも、実機基本driver、EKF、`koko_twist_mux`、RVizは別途必要。
 
 ```bash
 ros2 lifecycle get /controller_server

@@ -107,10 +107,13 @@ koko_twist_mux
 # 用途に応じてどちらか
 koko_slamtoolbox_real
 koko_nav2_real
+koko_nav2_real_slam  # SLAM Toolbox + Nav2（地図を生成・更新）
 
 # 表示
 koko_rviz_real
 ```
+
+`koko_nav2_real_slam` はmap serverとAMCLを起動しない。SLAM Toolboxが `/map` と `map -> robot/odom` を配信し、Nav2は更新中の地図を使う。永続化は別ターミナルの `koko_map_save` で行う。
 
 ## SIRIUSとの差分
 
