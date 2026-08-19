@@ -78,7 +78,7 @@ Nav2 controller_server
 | エンコーダ | 950 pulse/車輪1回転 |
 | Roboteq odom配信 | 50 Hz |
 | Nav2フットプリント | 前0.425 m、後0.475 m、左右0.33 m（全長0.90 x 全幅0.66 m） |
-| Nav2最大前進速度 | 0.90 m/s |
+| Nav2前進基準（上限） | 0.60 m/s |
 | Nav2最大角速度 | 0.90 rad/s |
 | 実機の前後速度不感帯 | 0.10 m/s（MPPI・odom判定・速度平滑化へ反映） |
 | Nav2 controller | MPPI (`DiffDrive`、2.8秒予測、footprint全体を衝突評価) |

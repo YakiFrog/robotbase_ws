@@ -75,7 +75,7 @@ map
 | controller frequency | 10 Hz |
 | prediction horizon | 2.8秒（`28 x 0.10`秒） |
 | `use_realtime_priority` | `false` |
-| 最大前進速度 | 0.90 m/s |
+| 前進基準速度（上限） | 0.60 m/s |
 | 最大後退速度 | -0.30 m/s |
 | 最大角速度 | 0.90 rad/s |
 | 実機の前後速度不感帯 | 0.10 m/s（MPPI評価・odom判定・velocity smoother） |
@@ -90,7 +90,9 @@ ZED、SAM3、Hokuyo、semantic layer、STVLは含まない。VLP-16点群は `ve
 
 Nav2 JazzyのObstacleLayerは、plugin全体とは別に観測source `scan.max_obstacle_height` を持ち、未指定時は `0.0` mになる。これをglobal/local costmapの両方で `2.0` mへ明示している。未指定に戻すと、床より高いVLP-16由来のLaserScan点が全件破棄され、local costmapが全セル0になる。
 
-MPPIの予測時間は2.8秒とする。最大速度0.9 m/sでの予測移動量は2.52 mで、半径3 mのlocal costmap内に車体外形まで収まる。旧6秒設定は5.4 m先まで予測しようとしてcostmap外へ達し、空き領域で低速周回する原因になっていた。
+MPPIの予測時間は2.8秒とする。基準速度0.6 m/sでの予測移動量は1.68 mで、半径3 mのlocal costmap内に車体外形まで収まる。旧6秒・0.9 m/s設定は5.4 m先まで予測しようとしてcostmap外へ達し、空き領域で低速周回する原因になっていた。
+
+MPPIには固定の巡航速度パラメータがないため、`vx_max`とvelocity smootherの前進上限を`0.60 m/s`にして、これを運用上の基準速度とする。直線で低速へ偏らないよう、候補軌道の分布を`vx_std: 0.30`、操作量ペナルティをNav2標準の`gamma: 0.015`とした。さらに`PathFollowCritic`を`cost_weight: 12.0`、`offset_from_furthest: 11`とし、0.05 m間隔の経路で約0.55 m先への進行を評価する。障害物衝突判定、footprint、inflation設定は変更しない。
 
 `PreferForwardCritic.cost_weight: 40.0`で、通常走行では後退より向き直って前進する軌道を強く優先する。`vx_min: -0.30`は維持しているため、前進軌道が成立しない場合やRecoveryのbackupでは後退できる。シミュレーションの後方ゴール試験で最大後退を約`-0.027 m/s`まで抑えた。
 
@@ -127,6 +129,22 @@ twist_mux優先度:
 | `/cmd_vel_idle` | 1 |
 
 Nav2とtwist_muxは別コマンドである。実機Nav2試験では `koko_twist_mux` の起動を確認する。
+
+### 実機の指令速度校正
+
+Roboteqの`speed_scale`は[実機用Roboteq設定](../params/real/roboteq.yaml)にあり、現在値は`0.52`である。この値は`/cmd_vel`から左右モータ指令を作る際だけに乗り、encoderから`/odom`を計算する側には乗らない。実距離とodom距離が一致しているのに定常走行中のodom速度だけが指令より低い場合は、次式を目安に調整する。
+
+```text
+new_speed_scale = current_speed_scale * command_speed / steady_odom_speed
+```
+
+例として`0.50 m/s`指令に対して定常odomが`0.47 m/s`なら、`0.52 * 0.50 / 0.47 = 0.553`が計算値になる。一度に大きく変えず、まず`0.01--0.02`刻みで試す。driverはパラメータを1秒ごとに再取得するため、一時試験はビルドも再起動も不要である。
+
+```bash
+ros2 param set /roboteq_ros2_driver speed_scale 0.54
+```
+
+次回起動にも残す場合は`params/real/roboteq.yaml`の`speed_scale`を同じ値へ変更する。YAMLだけの変更なのでビルドは不要だが、既に起動中のdriverへYAML変更だけを反映するには再起動が必要である。なお、床上の実距離とodom距離自体が一致しない場合は`speed_scale`ではなく、`wheel_circumference`、`pulse`、`gear_ratio`を先に校正する。
 
 ## 削除した旧設定
 
