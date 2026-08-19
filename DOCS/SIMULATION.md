@@ -5,7 +5,7 @@
 `src/robotbase_sim/` は、実機がなくても次を確認するための最小構成です。
 
 - 差動二輪の手動走行
-- Velodyne VLP-16相当の3D点群と、点群から変換した2D `/scan`
+- Velodyne VLP-16相当の3D点群と、複数リングから変換した2D `/scan3`
 - IMUデータ
 - slam_toolboxによる2D地図生成
 - 同梱地図を使ったNav2の経路生成、障害物回避、速度指令、ゴール到達
@@ -15,7 +15,7 @@
 | 確認項目 | 結果 |
 |---|---|
 | `/odom` | 約50 Hz |
-| `/velodyne_points` / `/scan` | 点群配信あり / 約10 Hz |
+| `/velodyne_points` / `/scan3` | 点群配信あり / 約10 Hz |
 | `/imu` | 約100 Hz |
 | slam_toolbox | Lifecycle `active`、`map -> base` TFと `/map` を確認 |
 | Nav2 | 管理ノードすべて `active`。AMCLも`active` |
@@ -152,7 +152,7 @@ ros2 launch robotbase_sim navigation_slam.launch.py
 | VLP16取付位置 | `base_footprint`から `(0, 0, 0.72)` m |
 | IMU取付位置 | `base_footprint`から `(0, 0, 0.28)` m |
 | VLP16 | 水平720点、垂直16 ring、上下±15度、10 Hz |
-| 2D scan | ring 8を `/scan` へ変換 |
+| 2D scan | ring 1〜6、8を距離制限付きで合成して `/scan3` へ変換 |
 | IMU | 100 Hz、簡易Gaussian noise付き |
 
 センサーの実取付位置が判明したら、SDFとURDFの両方を同じ値へ変更します。
@@ -194,14 +194,14 @@ ros2 launch robotbase_sim navigation.launch.py localization:=static
 
 既定接頭辞は `robot` です。`robot.env` の `ROBOTBASE_TF_PREFIX` を変えると、alias経由のGazebo、URDF、SLAM、Nav2、RVizへ一括反映されます。
 
-各 `koko_sim` 起動は `GZ_PARTITION` にプロセス固有の接尾辞を加えます。またGazebo内部のセンサー・odom・速度トピックも `/robot/...` に分離してからROS側の標準トピックへbridgeします。このため、終了し損ねた旧GazeboやSiriusモデルが同じPCに残っても `/scan` へ混入しません。
+各 `koko_sim` 起動は `GZ_PARTITION` にプロセス固有の接尾辞を加えます。またGazebo内部のセンサー・odom・速度トピックも `/robot/...` に分離してからROS側の標準トピックへbridgeします。このため、終了し損ねた旧GazeboやSiriusモデルが同じPCに残っても `/scan3` へ混入しません。
 
 ## トピック経路
 
 センサー:
 
 ```text
-Gazebo VLP16 -> /velodyne_points -> velodyne_laserscan -> /scan
+Gazebo VLP16 -> /velodyne_points -> velodyne_laserscan -> /scan3
 Gazebo IMU   -> /imu
 Gazebo DiffDrive -> /odom + odom TF
 ```
@@ -224,7 +224,7 @@ controller_server
 
 ```bash
 ros2 topic hz /odom
-ros2 topic hz /scan
+ros2 topic hz /scan3
 ros2 topic hz /imu
 ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
 ros2 run tf2_ros tf2_echo robot/base_footprint robot/lidar_link
@@ -240,7 +240,7 @@ ros2 topic hz /cmd_vel_smoothed
 ros2 topic hz /cmd_vel
 ```
 
-最初に止まった境界を調べます。Nav2モードで `map -> robot/odom` がない場合は `map_to_odom_ground_truth`、地図生成モードで同じTFがない場合は `/slam_toolbox` のLifecycleと `/scan` を確認します。
+最初に止まった境界を調べます。Nav2モードで `map -> robot/odom` がない場合は `map_to_odom_ground_truth`、地図生成モードで同じTFがない場合は `/slam_toolbox` のLifecycleと `/scan3` を確認します。
 
 ## ファイル一覧
 
@@ -257,7 +257,7 @@ ros2 topic hz /cmd_vel
 | `params/sim/nav2.yaml` | シミュレーション用Nav2設定 |
 | `params/sim/slam_toolbox.yaml` | 2D SLAM設定 |
 | `params/sim/twist_mux.yaml` | 手動/Nav2/停止の速度優先順位 |
-| `params/sim/velodyne_laserscan.yaml` | VLP-16相当点群から `/scan` への変換 |
+| `params/sim/velodyne_laserscan.yaml` | VLP-16相当点群から複数リング合成 `/scan3` への変換 |
 | `params/sim/idle_twist.yaml` | 停止時のゼロ速度発行 |
 | `rviz/robotbase.rviz` | SLAM/Nav2共通RViz設定 |
 

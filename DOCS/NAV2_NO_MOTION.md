@@ -193,15 +193,15 @@ ros2 run tf2_ros tf2_echo map robot/base_footprint
 
 グローバルパスが描けても、local controllerに必要な最新TFが取れず速度を出せない場合がある。
 
-### 5.2 `/scan` またはsensor TFがない
+### 5.2 `/scan3` またはsensor TFがない
 
-実機用 `params/real/nav2.yaml` はAMCL、global costmap、local costmapで `/scan` を参照する。
+実機用 `params/real/nav2.yaml` はAMCL、global costmap、local costmapで `/scan3` を参照する。
 
 ```bash
-ros2 topic hz /scan
-ros2 topic info /scan -v
-ros2 topic echo /scan --once
-ros2 run tf2_ros tf2_echo robot/base_footprint <scan_header_frame_id>
+ros2 topic hz /scan3
+ros2 topic info /scan3 -v
+ros2 topic echo /scan3 --once
+ros2 run tf2_ros tf2_echo robot/base_footprint <scan3_header_frame_id>
 ```
 
 見る点:
@@ -211,7 +211,7 @@ ros2 run tf2_ros tf2_echo robot/base_footprint <scan_header_frame_id>
 - timestampが現在時刻か
 - 距離値が全て0、NaN、範囲外でないか
 
-VLP-16 driverと `velodyne_laserscan` が `/scan` を生成する。ZED/Hokuyo/旧scan topicは使用しない。
+VLP-16 driverと改造版 `velodyne_laserscan` が、複数リングを距離制限付きで合成した `/scan3` を生成する。単一リング `/scan`、ZED、HokuyoはNav2入力に使用しない。
 
 ### 5.3 local costmapが未知または障害物で埋まる
 
@@ -219,7 +219,7 @@ VLP-16 driverと `velodyne_laserscan` が `/scan` を生成する。ZED/Hokuyo/�
 
 - rolling 6 x 6 m
 - 0.05 m/cell、free space初期化
-- 有効な観測pluginは2D `/scan` のobstacle layerのみ
+- 有効な観測pluginは2D `/scan3` のobstacle layerのみ
 - `scan.max_obstacle_height: 2.0` m
 - inflation radius 0.70 m
 - footprint 0.85 x 0.56 m
@@ -230,7 +230,7 @@ RVizで次を同時表示する。
 
 - Local Costmap
 - Local Footprint
-- LaserScan `/scan`
+- LaserScan `/scan3`
 - DWB trajectories（必要時）
 - RobotModelとTF
 
@@ -293,7 +293,7 @@ ros2 pkg executables robotbase_keyop
 
 1. robotbaseを再ビルド・sourceする（新設定は `use_realtime_priority: false`）
 2. `koko_roboteq`, `koko_velodyne`, `koko_imu`, `koko_sf_real`, `koko_twist_mux`, `koko_nav2_real` の順に起動する
-3. `/odom/filtered`、`/scan`、TFを確認する
+3. `/odom/filtered`、`/scan3`、TFを確認する
 4. `keyop2` は終了するか、`s` 後1秒待つ。`/stop` を解除する
 5. Nav2ゴールを送る
 6. `/cmd_vel_nav -> /cmd_vel_smoothed -> /cmd_vel` を同時記録する
@@ -304,7 +304,7 @@ ros2 pkg executables robotbase_keyop
 ```bash
 ros2 bag record \
   /cmd_vel_nav /cmd_vel_smoothed /cmd_vel \
-  /odom /odom/filtered /scan \
+  /odom /odom/filtered /scan3 \
   /tf /tf_static \
   /plan /local_plan \
   /local_costmap/costmap /global_costmap/costmap

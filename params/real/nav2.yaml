@@ -1,5 +1,5 @@
 # ココちゃん実機用Nav2設定。
-# センサー入力はVLP-16から生成した /scan のみ。
+# センサー入力はVLP-16の複数リングから生成した /scan3 のみ。
 
 amcl:
   ros__parameters:
@@ -7,7 +7,7 @@ amcl:
     base_frame_id: base_footprint
     global_frame_id: map
     odom_frame_id: odom
-    scan_topic: /scan
+    scan_topic: /scan3
     robot_model_type: nav2_amcl::DifferentialMotionModel
     laser_model_type: likelihood_field
     min_particles: 500
@@ -60,7 +60,7 @@ global_costmap:
         plugin: nav2_costmap_2d::ObstacleLayer
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /scan3
           data_type: LaserScan
           max_obstacle_height: 2.0
           marking: true
@@ -147,7 +147,7 @@ local_costmap:
         plugin: nav2_costmap_2d::ObstacleLayer
         observation_sources: scan
         scan:
-          topic: /scan
+          topic: /scan3
           data_type: LaserScan
           max_obstacle_height: 2.0
           marking: true

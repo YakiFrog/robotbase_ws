@@ -61,7 +61,7 @@ map
 | `use_sim_time` | `true` | `false` |
 | localization | AMCL（既定）、固定TF（試験用オプション） | AMCL |
 | odometry | `/odom` | `/odom/filtered` |
-| LaserScan | `/scan` | `/scan` |
+| LaserScan | `/scan3` | `/scan3` |
 
 起動するNav2ノードはcontroller、planner、smoother、behavior、BT navigator、velocity smoother、map server、AMCL。Route、Docking、Waypoint Follower、Loopback Simulator、Collision Monitorは現在の用途から外した。シミュレーションでも既存地図モードの既定はAMCLなので、RVizの `2D Pose Estimate` が `/initialpose` を通して有効になる。経路制御だけを再現性優先で試す場合は `localization:=static` を明示できる。
 
@@ -77,16 +77,16 @@ map
 | 最大角速度 | 0.90 rad/s |
 | footprint | 前0.40、後0.45、左右0.28 m |
 | local costmap | 6 x 6 m、0.05 m/cell |
-| obstacle source | `/scan` のみ |
+| obstacle source | `/scan3` のみ |
 | scan obstacle height | 0.0〜2.0 m（source単位で明示） |
 
-ZED、SAM3、Hokuyo、semantic layer、STVL、`/scan3` は含まない。VLP-16点群は `velodyne_laserscan` により `/scan` へ変換して使う。
+ZED、SAM3、Hokuyo、semantic layer、STVLは含まない。VLP-16点群は `velodyne_laserscan` により複数リング合成 `/scan3` へ変換して使う。単一リング `/scan` も配信されるが、Nav2とSLAM Toolboxの入力には使わない。
 
 Nav2 JazzyのObstacleLayerは、plugin全体とは別に観測source `scan.max_obstacle_height` を持ち、未指定時は `0.0` mになる。これをglobal/local costmapの両方で `2.0` mへ明示している。未指定に戻すと、床より高いVLP-16由来のLaserScan点が全件破棄され、local costmapが全セル0になる。
 
 ## SLAM Toolbox
 
-実機は `params/real/slam_toolbox.yaml`、シミュレータは `params/sim/slam_toolbox.yaml` を使う。入力は `/scan`、出力TFは `map -> <prefix>/odom`。
+実機は `params/real/slam_toolbox.yaml`、シミュレータは `params/sim/slam_toolbox.yaml` を使う。入力は `/scan3`、出力TFは `map -> <prefix>/odom`。
 
 ```bash
 koko_slamtoolbox_sim   # use_sim_time=true

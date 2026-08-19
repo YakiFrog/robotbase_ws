@@ -18,7 +18,7 @@
 - Roboteqへの速度指令と新driver設定による左右車輪の向き・速度
 - `/odom` と `/odom/filtered` の値、符号、周期
 - IMUの実デバイス名、取付方向、角速度符号
-- VLP-16のIP疎通、packet受信、`/scan`、sensor TF
+- VLP-16のIP疎通、packet受信、`/scan3`、sensor TF
 - 新しい実機Nav2 paramsでのゴール走行
 
 ## 0. Git転送前の必須確認
@@ -250,7 +250,7 @@ ros2 topic hz /odom
 ros2 topic hz /odom/filtered
 ros2 topic hz /imu
 ros2 topic hz /velodyne_points
-ros2 topic hz /scan
+ros2 topic hz /scan3
 ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
 ros2 run tf2_ros tf2_echo robot/base_footprint robot/lidar_link
 ros2 run tf2_ros tf2_echo robot/base_footprint robot/imu_link
@@ -301,7 +301,7 @@ ros2 topic hz /cmd_vel_nav
 ros2 topic hz /cmd_vel_smoothed
 ros2 topic hz /cmd_vel
 ros2 topic hz /odom/filtered
-ros2 topic hz /scan
+ros2 topic hz /scan3
 ```
 
 速度が最初に途切れる境界とNav2ログを保存する。旧実機でパスだけ出て動かなかった最有力候補と詳細は `DOCS/NAV2_NO_MOTION.md` を参照。

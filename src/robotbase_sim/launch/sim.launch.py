@@ -126,6 +126,7 @@ def generate_launch_description():
         remappings=[
             ('velodyne_points', '/velodyne_points'),
             ('scan', '/scan'),
+            ('scan3', '/scan3'),
         ],
     )
 

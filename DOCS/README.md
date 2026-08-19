@@ -12,6 +12,7 @@
 6. [SIMULATION.md](SIMULATION.md) — 実機なしで地図生成・Nav2走行を試す
 7. [LAUNCHER.md](LAUNCHER.md) — ココちゃん用Bash、UI、SIRIUSとの分離設定
 8. [FOXGLOVE.md](FOXGLOVE.md) — Foxglove Bridgeの接続、ポート分離、公開権限
+9. [SLAM_TOOLBOX.md](SLAM_TOOLBOX.md) — シリウスとの差分、地図のゴミに関係する値、調整方針
 
 ## AIへ調査を依頼するとき
 
@@ -29,7 +30,7 @@ robotbase_ws/README.md と DOCS/PROJECT_CONTEXT.md を先に読み、
 - 起動したエイリアス一覧
 - Nav2端末の警告・エラー
 - `/cmd_vel_nav`、`/cmd_vel_smoothed`、`/cmd_vel` の有無
-- `/odom/filtered`、`/scan` の周波数
+- `/odom/filtered`、`/scan3` の周波数
 - `controller_server` と `velocity_smoother` のLifecycle状態
 - 使用地図と初期姿勢
 

@@ -61,7 +61,7 @@ input_filename() {
     echo "保存先: $ROSBAG_DIR"
     echo ""
     echo "記録対象トピック:"
-    echo "  - /scan (VLP-16から生成した2D LiDAR)"
+    echo "  - /scan3 (VLP-16複数リングから生成した2D LiDAR)"
     echo "  - /odom, /odom/filtered (オドメトリ)"
     echo "  - /imu (IMU)"
     echo "  - /tf, /tf_static (座標変換)"
@@ -126,7 +126,7 @@ start_recording() {
 
     ros2 bag record -o "$CURRENT_BAG_PATH" \
         /experiment_metadata \
-        /scan \
+        /scan3 \
         /odom \
         /odom/filtered \
         /imu \

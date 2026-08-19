@@ -19,7 +19,7 @@ Foxglove Bridgeは実機・シミュレーション共通で `koko_foxglove` か
 
 1. 旧設定の `controller_server.use_realtime_priority: true` に対して、実機PCのRT優先度権限が未設定
 2. `twist_mux` の起動漏れ、または `/cmd_vel_nav` から `/cmd_vel` までの途中停止
-3. `/odom/filtered`、`/scan`、TF、ローカルコストマップのいずれかが未更新
+3. `/odom/filtered`、`/scan3`、TF、ローカルコストマップのいずれかが未更新
 4. `keyop2` または `/stop` が `twist_mux` のNav2入力より高い優先度を保持
 
 最有力だった1に対し、新しい実機設定では `use_realtime_priority: false` に変更済みです。実機での再確認はまだです。
@@ -60,7 +60,7 @@ Nav2 controller_server
 
 この主経路のトピック名はコード上は整合しています。ただし `twist_mux` は `nav2_real` から自動起動されません。別ターミナルまたはランチャーでの起動が必須です。
 
-`collision_monitor` は未接続の設定を残さず、現在の最小Nav2 launchから外しています。`/scan` はcostmap回避に使われますが、独立した最終停止レイヤーは未実装です。
+`collision_monitor` は未接続の設定を残さず、現在の最小Nav2 launchから外しています。`/scan3` はcostmap回避に使われますが、独立した最終停止レイヤーは未実装です。
 
 ## 実機の主な設定
 
@@ -74,7 +74,7 @@ Nav2 controller_server
 | Nav2フットプリント | 前0.40 m、後0.45 m、左右0.28 m |
 | Nav2最大前進速度 | 0.90 m/s |
 | Nav2最大角速度 | 0.90 rad/s |
-| Nav2入力LaserScan | `/scan` |
+| Nav2入力LaserScan | `/scan3` |
 | 制御用オドメトリ | `/odom/filtered` |
 
 値の出典とSIRIUSとの差分は [構成資料](DOCS/ARCHITECTURE.md) にまとめています。
@@ -92,7 +92,7 @@ source ~/robotbase_ws/bash/bash_alias2.sh
 
 ```bash
 koko_roboteq       # Roboteq + ココちゃんURDF
-koko_velodyne      # VLP-16。/velodyne_points と /scan
+koko_velodyne      # VLP-16。/velodyne_points、/scan、複数リング合成/scan3
 koko_imu           # IMU
 koko_sf_real       # /odom + /imu -> /odom/filtered、odom TF
 koko_twist_mux     # Nav2/keyop2の速度指令を /cmd_vel に統合
@@ -121,7 +121,7 @@ ros2 topic hz /cmd_vel_smoothed
 ros2 topic hz /cmd_vel
 
 ros2 topic hz /odom/filtered
-ros2 topic hz /scan
+ros2 topic hz /scan3
 ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
 ```
 
@@ -166,6 +166,7 @@ Failed to make progress
 - [Gazeboシミュレータの構成と使い方](DOCS/SIMULATION.md)
 - [ココちゃんBash・ランチャー・通信分離](DOCS/LAUNCHER.md)
 - [Foxglove Bridgeの接続と設定](DOCS/FOXGLOVE.md)
+- [SLAM Toolbox設定とSIRIUSとの差分](DOCS/SLAM_TOOLBOX.md)
 
 ## ビルド
 

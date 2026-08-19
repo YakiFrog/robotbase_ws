@@ -28,9 +28,9 @@ Roboteq encoder -> /odom ----+
                               +-> robot_localization EKF -> /odom/filtered
 IMU ------------> /imu ------+
 
-VLP-16 packets -> /velodyne_points -> velodyne_laserscan -> /scan
+VLP-16 packets -> /velodyne_points -> velodyne_laserscan -> /scan3
 
-/scan + map + odom TF -> AMCL -> map -> robot/odom
+/scan3 + map + odom TF -> AMCL -> map -> robot/odom
 ```
 
 TF責務:
@@ -125,7 +125,7 @@ koko_rviz_real
 | odom publish | 20 Hz | 50 Hz |
 | 車体footprint | 約1.20 x 0.70 m | 0.85 x 0.56 m |
 | センサー | 複数LiDAR/カメラ構成 | VLP-16 + IMU |
-| LaserScan | `scan3`等 | `/scan` |
+| LaserScan | `scan3`等 | `/scan3` |
 | TF prefix | `sirius3` | `robot`（設定可能） |
 | controller | MPPI中心 | DWB最小構成 |
 
@@ -133,7 +133,7 @@ ZED、SAM3、RTAB-MAP、Hokuyo、semantic costmap、STVLはココちゃんの有
 
 ## 安全上の未完了
 
-現在はcostmapのObstacleLayerで `/scan` を使うが、Nav2 Collision Monitorのような独立した最終停止段は起動していない。実機で速度指令経路を確認後、必要なら次の一方向へ追加する。
+現在はcostmapのObstacleLayerで `/scan3` を使うが、Nav2 Collision Monitorのような独立した最終停止段は起動していない。実機で速度指令経路を確認後、必要なら次の一方向へ追加する。
 
 ```text
 velocity_smoother -> collision monitor -> twist_mux -> Roboteq

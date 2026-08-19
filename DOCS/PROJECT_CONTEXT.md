@@ -37,7 +37,7 @@
 - 生odom: `/odom`
 - EKF odom: `/odom/filtered`
 - PointCloud2: `/velodyne_points`
-- LaserScan: `/scan`
+- Nav2/SLAM用LaserScan: `/scan3`（複数リング合成）
 - IMU: `/imu`
 - TF: `map -> robot/odom -> robot/base_footprint`
 
@@ -93,18 +93,18 @@ ros2 topic hz /cmd_vel_nav
 ros2 topic hz /cmd_vel_smoothed
 ros2 topic hz /cmd_vel
 ros2 topic hz /odom/filtered
-ros2 topic hz /scan
+ros2 topic hz /scan3
 ros2 run tf2_ros tf2_echo robot/odom robot/base_footprint
 ```
 
-最初に途切れる境界が原因箇所。新設定ではRT優先度を無効化済みなので、次はtwist_mux、`/stop`、odom/scan/TF更新を優先して見る。
+最初に途切れる境界が原因箇所。新設定ではRT優先度を無効化済みなので、次はtwist_mux、`/stop`、odom/scan3/TF更新を優先して見る。
 
 ## 含めないもの
 
 ココちゃんの有効なUI、alias、Nav2/SLAM paramsには次を含めない。
 
 - ZED、SAM3、RTAB-MAP
-- Hokuyo、`/scan3`、`/hokuyo_scan`
+- Hokuyo、`/hokuyo_scan`（`/scan3` はVLP-16用として使用）
 - LLM dynamic goal、status monitor、BLE gateway
 - semantic costmap、STVL
 - 外部連携タブ（Foxgloveは依頼によりユーティリティへ個別追加）
