@@ -222,7 +222,7 @@ VLP-16 driverと改造版 `velodyne_laserscan` が、複数リングを距離制
 - 有効な観測pluginは2D `/scan3` のobstacle layerのみ
 - `scan.max_obstacle_height: 2.0` m
 - inflation radius 0.70 m
-- footprint 0.85 x 0.56 m
+- footprint 0.90 x 0.66 m
 
 `scan.max_obstacle_height` は観測source内に必要で、未指定時の既定値は0.0 m。VLP-16の取付高さが0 mより上の場合、これがないとスキャン点が全件除外され、配信トピックが存在してもlocal costmapは全セル0になる。反対に、センサー自己点、誤TF、地面反射でロボット周囲がlethalになるとDWBは有効軌道を出せない。
 

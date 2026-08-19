@@ -17,7 +17,7 @@
         </inertia>
       </inertial>
       <visual name="body_visual">
-        <geometry><box><size>0.85 0.56 0.28</size></box></geometry>
+        <geometry><box><size>0.90 0.66 0.28</size></box></geometry>
         <material>
           <ambient>0.08 0.25 0.55 1</ambient>
           <diffuse>0.10 0.35 0.80 1</diffuse>
@@ -25,7 +25,7 @@
         </material>
       </visual>
       <collision name="body_collision">
-        <geometry><box><size>0.85 0.56 0.28</size></box></geometry>
+        <geometry><box><size>0.90 0.66 0.28</size></box></geometry>
       </collision>
     </link>
 

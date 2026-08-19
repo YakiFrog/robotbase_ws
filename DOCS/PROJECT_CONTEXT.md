@@ -33,7 +33,7 @@
 - 車輪直径/円周: 0.20 / 0.6283 m
 - トレッド: 0.435 m
 - encoder: 950 pulse/回転
-- footprint: 前0.40、後0.45、左右0.28 m
+- footprint: 前0.425、後0.475、左右0.33 m（全長0.90 x 全幅0.66 m）
 - 生odom: `/odom`
 - EKF odom: `/odom/filtered`
 - PointCloud2: `/velodyne_points`

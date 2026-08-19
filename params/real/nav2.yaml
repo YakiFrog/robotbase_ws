@@ -51,7 +51,8 @@ global_costmap:
       publish_frequency: 1.0
       resolution: 0.05
       track_unknown_space: true
-      footprint: "[[0.40, 0.28], [0.40, -0.28], [-0.45, -0.28], [-0.45, 0.28]]"
+      # 全長0.90 m（前0.425/後0.475）、全幅0.66 m（左右各0.33）。
+      footprint: "[[0.425, 0.33], [0.425, -0.33], [-0.475, -0.33], [-0.475, 0.33]]"
       plugins: [static_layer, obstacle_layer, inflation_layer]
       static_layer:
         plugin: nav2_costmap_2d::StaticLayer
@@ -117,8 +118,14 @@ controller_server:
       transform_tolerance: 0.5
       short_circuit_trajectory_evaluation: true
       stateful: true
-      critics: [RotateToGoal, Oscillation, BaseObstacle, GoalAlign, PathAlign, PathDist, GoalDist]
+      critics: [RotateToGoal, Oscillation, BaseObstacle, PreferForward, GoalAlign, PathAlign, PathDist, GoalDist]
       BaseObstacle.scale: 0.02
+      # 後退は禁止せず、前進可能な状況では選ばれにくくする。
+      PreferForward.scale: 20.0  # critic全体の重み
+      PreferForward.penalty: 5.0  # 後退軌道へ与える固定ペナルティ（合計100）
+      PreferForward.strafe_x: 0.05  # これ未満の低速直進を停滞として評価[m/s]
+      PreferForward.strafe_theta: 0.20  # 停滞判定から除外する旋回速度[rad/s]
+      PreferForward.theta_scale: 0.0  # 前進方向へ向き直す旋回には追加コストを掛けない
       PathAlign.scale: 32.0
       PathAlign.forward_point_distance: 0.10
       GoalAlign.scale: 24.0
@@ -141,7 +148,8 @@ local_costmap:
       width: 6
       height: 6
       resolution: 0.05
-      footprint: "[[0.40, 0.28], [0.40, -0.28], [-0.45, -0.28], [-0.45, 0.28]]"
+      # global/localで同じ実車外形を使用する。
+      footprint: "[[0.425, 0.33], [0.425, -0.33], [-0.475, -0.33], [-0.475, 0.33]]"
       plugins: [obstacle_layer, inflation_layer]
       obstacle_layer:
         plugin: nav2_costmap_2d::ObstacleLayer

@@ -123,7 +123,7 @@ koko_rviz_real
 | トレッド幅 | 0.40 m | 0.435 m |
 | encoder pulse/回転 | 475 | 950 |
 | odom publish | 20 Hz | 50 Hz |
-| 車体footprint | 約1.20 x 0.70 m | 0.85 x 0.56 m |
+| 車体footprint | 約1.20 x 0.70 m | 0.90 x 0.66 m |
 | センサー | 複数LiDAR/カメラ構成 | VLP-16 + IMU |
 | LaserScan | `scan3`等 | `/scan3` |
 | TF prefix | `sirius3` | `robot`（設定可能） |

@@ -148,7 +148,7 @@ ros2 launch robotbase_sim navigation_slam.launch.py
 | 車輪直径 | 0.20 m |
 | トレッド幅 | 0.435 m |
 | 車輪joint軸 | `base_footprint`基準のY軸 `(0, 1, 0)` |
-| 車体外形 | 約0.85 x 0.56 m |
+| 車体外形 | 約0.90 x 0.66 m |
 | VLP16取付位置 | `base_footprint`から `(0, 0, 0.72)` m |
 | IMU取付位置 | `base_footprint`から `(0, 0, 0.28)` m |
 | VLP16 | 水平720点、垂直16 ring、上下±15度、10 Hz |
