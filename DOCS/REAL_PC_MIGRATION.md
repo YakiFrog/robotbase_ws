@@ -9,7 +9,7 @@
 - GazeboでSLAM、既存地図Nav2、SLAM同時Nav2が動作
 - Nav2の速度経路は `/cmd_vel_nav -> /cmd_vel_smoothed -> twist_mux -> /cmd_vel`
 - `robotbase_keyop` はキー入力から `/cmd_vel_teleop` を出力
-- `robotbase_bringup`、`robotbase_keyop`、`robotbase_sim` と主要依存パッケージが開発PCでビルド可能
+- `robotbase_bringup`、`robotbase_keyop`、`robotbase_waypoint`、`robotbase_sim` と主要依存パッケージが開発PCでビルド可能
 - 実機用paramsは `params/real/`、シミュレーション用は `params/sim/`
 - SIRIUS移植元の `src/sirius/` は `COLCON_IGNORE` によりビルド対象外
 
@@ -31,7 +31,7 @@ git status --short
 git diff --check
 ```
 
-今回の変更には新規の `params/`、`src/robotbase_keyop/`、`rviz/`、`maps_waypoints/` と、多数のlaunch/doc変更が含まれる。内容を確認してからcommit・pushする。
+今回の変更には新規の `params/`、`src/robotbase_keyop/`、`src/robotbase_waypoint/`、`rviz/`、`maps_waypoints/` と、多数のlaunch/doc変更が含まれる。内容を確認してからcommit・pushする。
 
 ```bash
 git add -A
@@ -101,7 +101,7 @@ cd ~/robotbase_ws
 source ~/robotbase_ws/bash/activate_koko_env.sh
 source /opt/ros/jazzy/setup.bash
 colcon build --symlink-install --executor sequential \
-  --packages-up-to robotbase_bringup robotbase_keyop robotbase_sim \
+  --packages-up-to robotbase_bringup robotbase_keyop robotbase_waypoint robotbase_sim \
   --allow-overriding nav2_costmap_2d
 source install/setup.bash
 ```
@@ -110,7 +110,7 @@ source install/setup.bash
 
 ```bash
 for package in \
-  robotbase_bringup robotbase_keyop robotbase_sim \
+  robotbase_bringup robotbase_keyop robotbase_waypoint robotbase_sim \
   roboteq_ros2_driver witmotion_ros velodyne_driver foxglove_bridge; do
   ros2 pkg prefix "$package"
 done

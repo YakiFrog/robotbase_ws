@@ -116,6 +116,11 @@ def generate_launch_description():
         name='velocity_smoother', output='screen', parameters=[parameters],
         remappings=tf_remaps + [('cmd_vel', 'cmd_vel_nav')],
     )
+    waypoint_follower = Node(
+        package='nav2_waypoint_follower', executable='waypoint_follower',
+        name='waypoint_follower', output='screen', parameters=[parameters],
+        remappings=tf_remaps,
+    )
     navigation_lifecycle = Node(
         package='nav2_lifecycle_manager', executable='lifecycle_manager',
         name='lifecycle_manager_navigation', output='screen',
@@ -125,6 +130,7 @@ def generate_launch_description():
             'node_names': [
                 'controller_server', 'smoother_server', 'planner_server',
                 'behavior_server', 'bt_navigator', 'velocity_smoother',
+                'waypoint_follower',
             ],
         }],
     )
@@ -151,5 +157,6 @@ def generate_launch_description():
         behaviors,
         navigator,
         velocity_smoother,
+        waypoint_follower,
         navigation_lifecycle,
     ])

@@ -9,11 +9,12 @@
 ## 現在地（2026-08-19）
 
 - 実機手動走行、`keyop2`: 成功
-- 旧Nav2: RVizにパスは出たが実機が動かなかった
-- 旧設定の最有力原因: `use_realtime_priority: true` と実機OS権限
-- 新Nav2: 専用最小設定へ置換し `use_realtime_priority: false`、実機再試験待ち
+- 旧Nav2: RVizにパスは出たが実機が動かなかった。当時の直接原因はログ不足で未確定
+- 新Nav2: 専用最小設定へ置換し`use_realtime_priority: false`、実機自律移動に成功
+- 実機Nav2: SLAMしながらの走行も確認済み。障害物余裕・滑らかさ・速度校正は調整中
 - Gazebo SLAM: 動作確認済み
 - Gazebo Nav2: `params/sim/`、分離launch、`robot/*` TFで `(4, 0)` 到達、`SUCCEEDED`
+- ウェイポイント: `robotbase_waypoint`でSIRIUS互換YAMLの記録・連続追従に対応
 - 実機ログ/rosbag: このチェックアウトにはなし
 
 ## 正本
@@ -55,6 +56,7 @@ koko_rviz_sim
 koko_slamtoolbox_sim  # 地図作成のみ
 koko_nav2_sim_map     # 既存地図でNav2
 koko_nav2_sim_slam    # 地図なし、SLAM + Nav2
+koko_waypoint_follow_sim
 ```
 
 実機:
@@ -70,6 +72,7 @@ koko_slamtoolbox_real # 地図生成時
 koko_nav2_real        # 自律移動時
 koko_nav2_real_slam   # 地図を生成・更新しながら自律移動
 koko_foxglove         # 共通Foxgloveサーバー、ws://PC_IP:8766
+koko_waypoint_follow  # YAMLを選択して連続自律移動
 ```
 
 GazeboとRVizは別プロセス。`koko_nav2_sim_slam` と `koko_nav2_real_slam` はSLAMとNav2を同時起動する。シミュレーションの `twist_mux` は `koko_sim` に含まれるが、実機では `koko_twist_mux` を別途起動する。

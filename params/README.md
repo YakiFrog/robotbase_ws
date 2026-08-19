@@ -8,6 +8,8 @@
 
 Nav2・SLAM Toolbox・twist_muxは、差分を直接比較して個別に調整できるよう実機用とシミュレーション用を別ファイルにしている。
 
+Nav2標準Waypoint Followerの設定も`real/nav2.yaml`と`sim/nav2.yaml`内の`waypoint_follower`に分けている。SIRIUS互換YAMLを使う独自クライアント本体は`src/robotbase_waypoint/`、操作手順は[`DOCS/WAYPOINTS.md`](../DOCS/WAYPOINTS.md)を参照する。
+
 Nav2のローカルコントローラは実機・シミュレーションともMPPIを使用する。ココちゃんの長方形footprint全体で障害物との衝突を評価するため、`CostCritic.consider_footprint`を有効にしている。
 
 MPPIには固定の巡航速度パラメータがないため、実機・シミュレーションとも`vx_max`とvelocity smootherの前進上限を`0.60 m/s`にして、これを運用上の基準速度とする。経路進行評価は共通で`PathFollowCritic.cost_weight: 12.0`・`offset_from_furthest: 11`とし、十分な空き領域の直線では上限付近を狙う。

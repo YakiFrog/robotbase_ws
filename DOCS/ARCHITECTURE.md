@@ -16,6 +16,7 @@
 | `navigation2` | Nav2本体 |
 | `slam_toolbox` | 2D SLAM |
 | `robotbase_keyop` | ココちゃん専用の手動操作ノード。`/cmd_vel_teleop` と `/stop` を出力 |
+| `robotbase_waypoint` | SIRIUS互換YAMLの地点記録と`NavigateToPose`連続goal送信 |
 
 `src/sirius/sirius_description` と `sirius_navigation` 内の旧launchは、ココちゃんのRViz/Nav2/SLAMから呼ばない。
 
@@ -55,6 +56,8 @@ RViz / NavigateToPose
   -> roboteq_ros2_driver
 ```
 
+YAML追従は`robotbase_waypoint`が各地点を`NavigateToPose`へ送る。Nav2標準`waypoint_follower`も起動しており、RViz等からの`/follow_waypoints`を受けられる。両方式のgoalを同時に送らない。
+
 この接続の正本:
 
 | 境界 | ファイル |
@@ -93,6 +96,9 @@ koko_nav2_sim_map
 
 koko_nav2_sim_slam
   slam_toolbox + 最小Nav2（地図なし）
+
+koko_waypoint_follow_sim
+  YAML選択 + NavigateToPose連続送信
 ```
 
 GazeboとRVizは独立して起動する。地図作成だけなら `koko_slamtoolbox_sim`、既存地図なら `koko_nav2_sim_map`、地図なし自律移動なら `koko_nav2_sim_slam` を選ぶ。シミュレーションの `twist_mux` は `koko_sim` 内で起動する。
@@ -110,6 +116,7 @@ koko_twist_mux
 koko_slamtoolbox_real
 koko_nav2_real
 koko_nav2_real_slam  # SLAM Toolbox + Nav2（地図を生成・更新）
+koko_waypoint_follow # YAML選択 + NavigateToPose連続送信
 
 # 表示
 koko_rviz_real

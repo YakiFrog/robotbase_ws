@@ -65,7 +65,7 @@ map
 | odometry | `/odom` | `/odom/filtered` |
 | LaserScan | `/scan3` | `/scan3` |
 
-起動するNav2ノードはcontroller、planner、smoother、behavior、BT navigator、velocity smoother、map server、AMCL。Route、Docking、Waypoint Follower、Loopback Simulator、Collision Monitorは現在の用途から外した。シミュレーションでも既存地図モードの既定はAMCLなので、RVizの `2D Pose Estimate` が `/initialpose` を通して有効になる。経路制御だけを再現性優先で試す場合は `localization:=static` を明示できる。
+起動するNav2ノードはcontroller、planner、smoother、behavior、BT navigator、velocity smoother、Waypoint Follower、map server、AMCL。Route、Docking、Loopback Simulator、Collision Monitorは現在の用途から外した。Waypoint Followerは`params/{real,sim}/nav2.yaml`の同名セクションを使い、`/follow_waypoints`を提供する。シミュレーションでも既存地図モードの既定はAMCLなので、RVizの `2D Pose Estimate` が `/initialpose` を通して有効になる。経路制御だけを再現性優先で試す場合は `localization:=static` を明示できる。
 
 設定の要点:
 

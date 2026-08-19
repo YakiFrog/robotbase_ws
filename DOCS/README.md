@@ -13,6 +13,7 @@
 7. [LAUNCHER.md](LAUNCHER.md) — ココちゃん用Bash、UI、SIRIUSとの分離設定
 8. [FOXGLOVE.md](FOXGLOVE.md) — Foxglove Bridgeの接続、ポート分離、公開権限
 9. [SLAM_TOOLBOX.md](SLAM_TOOLBOX.md) — シリウスとの差分、地図のゴミに関係する値、調整方針
+10. [WAYPOINTS.md](WAYPOINTS.md) — ウェイポイントの記録、YAML追従、停止仕様
 
 ## AIへ調査を依頼するとき
 

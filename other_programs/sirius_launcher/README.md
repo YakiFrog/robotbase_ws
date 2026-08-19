@@ -65,7 +65,7 @@ alias koko_slamtoolbox_sim='koko_src && ros2 launch robotbase_sim mapping.launch
 - `koko_src` と `koko_env` はGUI内で明示的な環境設定へ展開される
 - インストール用aliasとランチャー自身はボタンから除外される
 
-タブは5つです。SLAMとシミュレーションNav2は「シミュレーション」タブへ配置します。Foxglove Bridgeは「ユーティリティ」タブです。外部連携タブは削除済みで、LLMとZED/SAM3関連aliasも読み込み対象に含めません。
+タブは5つです。SLAM、シミュレーションNav2、シミュレーション用ウェイポイント操作は「シミュレーション」タブへ配置します。実機用ウェイポイント操作は「ナビゲーション」タブ、Foxglove Bridgeは「ユーティリティ」タブです。外部連携タブは削除済みで、LLMとZED/SAM3関連aliasも読み込み対象に含めません。
 
 ## テスト
 

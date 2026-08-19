@@ -57,6 +57,13 @@ alias koko_keyop2_sim='koko_sim_src && ros2 run robotbase_keyop robotbase_keyop_
 # シミュレーションの/mapを保存する。
 alias koko_map_save_sim='koko_sim_env && bash ~/robotbase_ws/bash/startup_bash/map_save.sh'
 
+# YAMLを選択してシミュレーションでウェイポイント追従（Nav2起動後に使用）
+alias koko_waypoint_follow_sim='koko_sim_src && bash ~/robotbase_ws/bash/startup_bash/waypoint_follow.sh sim'
+
+# 現在位置をウェイポイントへ1点保存 / 走行距離ごとに連続保存
+alias koko_waypoint_save_sim='koko_sim_src && bash ~/robotbase_ws/bash/startup_bash/waypoint_record.sh once sim'
+alias koko_waypoint_record_sim='koko_sim_src && bash ~/robotbase_ws/bash/startup_bash/waypoint_record.sh distance sim'
+
 # TAB: ユーティリティ
 # GROUP: ユーティリティ
 
@@ -86,6 +93,13 @@ alias koko_pcl_detect='koko_env && bash ~/robotbase_ws/bash/startup_bash/pcl_det
 
 # 手動操作 V2（優先順位対応版）
 alias koko_keyop2='koko_src && ros2 run robotbase_keyop robotbase_keyop_v2 --ros-args --params-file "${ROBOTBASE_PARAMS_DIR}/common/keyop.yaml"'
+
+# YAMLを選択して実機でウェイポイント追従（Nav2起動後に使用）
+alias koko_waypoint_follow='koko_src && bash ~/robotbase_ws/bash/startup_bash/waypoint_follow.sh real'
+
+# 現在位置をウェイポイントへ1点保存 / 走行距離ごとに連続保存
+alias koko_waypoint_save='koko_src && bash ~/robotbase_ws/bash/startup_bash/waypoint_record.sh once real'
+alias koko_waypoint_record='koko_src && bash ~/robotbase_ws/bash/startup_bash/waypoint_record.sh distance real'
 
 # ココちゃんランチャー起動
 alias koko_launcher='koko_env && cd ${HOME}/robotbase_ws/other_programs/sirius_launcher && python3 robot_launcher.py'

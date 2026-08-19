@@ -289,3 +289,17 @@ velocity_smoother:
     odom_duration: 0.3
     deadband_velocity: [0.10, 0.0, 0.0]
     velocity_timeout: 1.0
+
+# Nav2標準の/follow_waypoints action server。独自YAMLと同時にgoalを送らない。
+waypoint_follower:
+  ros__parameters:
+    use_sim_time: true
+    loop_rate: 20
+    stop_on_failure: true
+    action_server_result_timeout: 900.0
+    global_frame_id: map
+    waypoint_task_executor_plugin: wait_at_waypoint
+    wait_at_waypoint:
+      plugin: nav2_waypoint_follower::WaitAtWaypoint
+      enabled: true
+      waypoint_pause_duration: 200

@@ -10,11 +10,12 @@ Foxglove Bridgeは実機では `koko_foxglove`、シミュレーションでは 
 
 - 実機の手動操作: 動作確認済み
 - `keyop2`: 動作確認済み
-- Nav2: RViz上でグローバルパス生成までは確認済み
-- Nav2による実機走行: 未動作。パス生成後に走り始めない
+- Nav2による実機走行: 動作確認済み。SLAMで地図を更新しながらの自律移動も確認済み
+- 実機Nav2の残作業: 障害物余裕、MPPIの滑らかさ、速度校正を継続調整中
 - Gazeboシミュレータ: 構築・動作確認済み
 - シミュレータでの2D地図生成: 動作確認済み
 - シミュレータでのNav2自律移動: 分離launch/シミュレーション専用params/`robot/*` TFで動作確認済み（障害物迂回ゴール成功）
+- ウェイポイント: SIRIUS互換YAMLの記録・追従とNav2標準`/follow_waypoints`サーバーを追加
 - 原因: 実機トピックを記録していないため未確定。ただし、コード上の優先度は次のとおり
 
 1. 旧設定の `controller_server.use_realtime_priority: true` に対して、実機PCのRT優先度権限が未設定
@@ -22,7 +23,7 @@ Foxglove Bridgeは実機では `koko_foxglove`、シミュレーションでは 
 3. `/odom/filtered`、`/scan3`、TF、ローカルコストマップのいずれかが未更新
 4. `keyop2` または `/stop` が `twist_mux` のNav2入力より高い優先度を保持
 
-最有力だった1に対し、新しい実機設定では `use_realtime_priority: false` に変更済みです。実機での再確認はまだです。
+最有力だった1に対し、新しい実機設定では `use_realtime_priority: false` に変更し、その後の実機自律移動は成功しています。ただし当時のログがないため、最初に動かなかった直接原因がRT権限だったか、twist_mux等の起動状態だったかは確定していません。
 
 詳細と実機での判定手順は [Nav2無走行の切り分け](DOCS/NAV2_NO_MOTION.md) を参照してください。
 
@@ -46,6 +47,9 @@ koko_nav2_sim_slam
 # 必要な場合は別端末
 koko_keyop2_sim
 koko_map_save_sim
+koko_waypoint_follow_sim
+koko_waypoint_save_sim
+koko_waypoint_record_sim
 ```
 
 `koko_nav2_sim_map` は同梱・保存済み地図を端末の一覧から選択し、AMCLを起動します。RVizの `2D Pose Estimate` で初期姿勢を指定できます。`koko_nav2_sim_slam` は地図なしでSLAM ToolboxとNav2を同時に使います。GazeboとRVizはどちらのモードでも別起動です。`twist_mux` は `koko_sim` に含まれるため、シミュレーションで別起動する必要はありません。
@@ -109,6 +113,9 @@ koko_nav2_real     # 地図を選択してNav2のみ起動
 koko_nav2_real_slam # 地図を生成・更新しながらNav2を起動
 koko_rviz_real     # RVizのみ
 koko_keyop2        # 必要な場合のみ
+koko_waypoint_follow # YAMLを選択して連続自律移動
+koko_waypoint_save   # 現在位置を1点保存
+koko_waypoint_record # 移動距離ごとに連続保存
 koko_foxglove      # 必要な場合のみ。Foxglove WebSocketサーバー
 ```
 
@@ -153,6 +160,7 @@ Failed to make progress
 | `src/robotbase_bringup/` | ココちゃん専用URDF、RViz、実機起動launch |
 | `src/robotbase_sim/` | Gazebo SimとVLP-16/IMUの模擬センサー |
 | `src/robotbase_keyop/` | 実機・シミュレーション共通のキーボード手動操作 |
+| `src/robotbase_waypoint/` | SIRIUS互換YAMLのウェイポイント記録・Nav2追従 |
 | `rviz/` | Save Configを次回起動へ引き継ぐTF接頭辞別RViz設定 |
 | `src/sirius/` | 移植元コード。現在の主要launch/paramsの正本ではない |
 | `src/roboteq_ros2_jazzy_driver/` | モータ指令とホイールオドメトリ |
@@ -176,6 +184,7 @@ Failed to make progress
 - [ココちゃんBash・ランチャー・通信分離](DOCS/LAUNCHER.md)
 - [Foxglove Bridgeの接続と設定](DOCS/FOXGLOVE.md)
 - [SLAM Toolbox設定とSIRIUSとの差分](DOCS/SLAM_TOOLBOX.md)
+- [ウェイポイントの記録・追従](DOCS/WAYPOINTS.md)
 
 ## ビルド
 
