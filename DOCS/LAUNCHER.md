@@ -100,6 +100,18 @@ Terminator tab: [ココちゃん] <alias>
 
 UIは5タブです。Gazebo、RViz、シミュレーション地図作成、2種類のシミュレーションNav2は「シミュレーション」タブに集約し、すべてDomain 58で起動します。実機用 `twist_mux` と `koko_nav2_real_slam` は「リアル実験」タブです。実機用`koko_foxglove`とシミュレーション用`koko_foxglove_sim`は「ユーティリティ」タブにあります。外部連携タブ、LLM、ZED/SAM3関連ボタンはありません。
 
+ランチャー上部の赤い「シミュレーション一式を終了」ボタンは、確認後に`ROBOTBASE_SIM_ROS_DOMAIN_ID`（既定58）またはココちゃん用Gazebo partitionに属するプロセスをまとめて終了する。SIGINTで正常終了を試し、残ったものだけSIGTERM、最終的にSIGKILLを使う。実機Domain 57とSIRIUSのプロセスは対象にしない。`/clock publisherが既にあります`と表示された場合や、Gazeboを最初から起動し直す場合に使用する。
+
+上部の「シミュレーション ROS_DOMAIN_ID」は0〜232から選択でき、「Domainを保存」で`robot.env`の`ROBOTBASE_SIM_ROS_DOMAIN_ID`へ保存する。初期値は58で、次に起動するGazebo、シミュレーションRViz、Nav2、SLAM、Keyop、Waypoint、Foxgloveへ共通反映される。実機Domain 57と同じ値は保存できない。
+
+古いDomainのプロセスを残したまま値だけ変えると、画面上は衝突を回避しても古いGazeboがバックグラウンドで動き続ける。このため、現在のシミュレーションDomainまたはGazebo partitionのプロセスが見つかった場合は保存を拒否する。赤い終了ボタンを先に押してから保存する。YAMLやPythonのビルドは不要で、保存後に新しく起動するプロセスから反映される。
+
+UIを起動できない場合は、同じ処理を端末から直接実行できる。
+
+```bash
+bash ~/robotbase_ws/bash/startup_bash/stop_simulation.sh
+```
+
 `koko_rviz_sim` と `koko_rviz_real` は `rviz/robotbase_<TF接頭辞>.rviz` を読み込む。RVizの通常の `File -> Save Config` で保存した表示構成は、次回の起動でもそのまま使われる。
 
 ## デスクトップショートカット

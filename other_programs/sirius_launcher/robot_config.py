@@ -24,6 +24,36 @@ def _read_env_file(path):
     return values
 
 
+def save_sim_ros_domain_id(domain_id, config_file=None):
+    """Atomically persist the simulation ROS domain in robot.env."""
+    value = str(domain_id)
+    if not value.isdigit() or not 0 <= int(value) <= 232:
+        raise ValueError('simulation ROS domain must be an integer from 0 to 232')
+
+    target = Path(config_file) if config_file is not None else CONFIG_FILE
+    current = _read_env_file(target)
+    if value == current.get('ROBOTBASE_ROS_DOMAIN_ID', '57'):
+        raise ValueError('simulation and real ROS domains must be different')
+
+    key = 'ROBOTBASE_SIM_ROS_DOMAIN_ID'
+    replacement = f'{key}="{value}"'
+    lines = target.read_text(encoding='utf-8').splitlines()
+    updated = False
+    for index, line in enumerate(lines):
+        if line.strip().startswith(f'{key}='):
+            lines[index] = replacement
+            updated = True
+            break
+    if not updated:
+        lines.append(replacement)
+
+    temporary = target.with_name(f'.{target.name}.tmp')
+    temporary.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+    temporary.chmod(target.stat().st_mode)
+    temporary.replace(target)
+    return value
+
+
 _config = _read_env_file(CONFIG_FILE)
 
 DISPLAY_NAME = _config.get('ROBOTBASE_DISPLAY_NAME', 'ココちゃん')

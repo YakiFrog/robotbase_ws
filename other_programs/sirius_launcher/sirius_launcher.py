@@ -3,7 +3,9 @@
 
 import os
 import signal
+import subprocess
 import sys
+import psutil
 from PySide6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PySide6.QtCore import QTimer, QEvent
 
@@ -16,6 +18,9 @@ from robot_config import (
     GZ_PARTITION,
     ROBOT_ID,
     ROS_DOMAIN_ID,
+    SIM_ROS_DOMAIN_ID,
+    WORKSPACE,
+    save_sim_ros_domain_id,
 )
 
 
@@ -167,6 +172,7 @@ class RobotLauncher(QMainWindow):
         self.buttons = []
         self.button_map = {}
         self.presets = []
+        self.sim_ros_domain_id = SIM_ROS_DOMAIN_ID
         self.original_tab_names = {} # index -> name
         self.setup_ui()
         self.load_aliases()
@@ -176,6 +182,121 @@ class RobotLauncher(QMainWindow):
         self.preset_layout, self.tab_layouts, self.tab_widget, self.reload_btn = MainWindowUI.setup_ui(
             self, DISPLAY_NAME, TAB_NAMES)
         self.reload_btn.clicked.connect(self.reload_launcher)
+        self.stop_simulation_btn.clicked.connect(self.stop_all_simulation)
+        self.save_sim_domain_btn.clicked.connect(self.save_simulation_domain)
+
+    def simulation_processes_running(self):
+        """Return True if the currently saved simulation graph still exists."""
+        partition_prefix = f'{GZ_PARTITION}_sim_'
+        for process in psutil.process_iter(['pid']):
+            if process.pid == os.getpid():
+                continue
+            try:
+                environment = process.environ()
+            except (psutil.AccessDenied, psutil.NoSuchProcess):
+                continue
+            if environment.get('ROS_DOMAIN_ID') == self.sim_ros_domain_id:
+                return True
+            if environment.get('GZ_PARTITION', '').startswith(partition_prefix):
+                return True
+        return False
+
+    def save_simulation_domain(self):
+        """Validate and persist the selected simulation ROS Domain ID."""
+        selected = str(self.sim_domain_spin.value())
+        if selected == ROS_DOMAIN_ID:
+            QMessageBox.warning(
+                self,
+                "保存できません",
+                f"実機Domainも{ROS_DOMAIN_ID}です。実機とシミュレーションには"
+                "異なる値を指定してください。",
+            )
+            self.sim_domain_spin.setValue(int(self.sim_ros_domain_id))
+            return
+        if selected == self.sim_ros_domain_id:
+            QMessageBox.information(
+                self, "保存済み", f"シミュレーションDomainは既に{selected}です。")
+            return
+        if self.simulation_processes_running():
+            QMessageBox.warning(
+                self,
+                "シミュレーションを先に終了してください",
+                f"現在のDomain {self.sim_ros_domain_id}にシミュレーション系プロセスが"
+                "残っています。\n\n赤い「シミュレーション一式を終了」を押してから"
+                "Domainを保存してください。",
+            )
+            self.sim_domain_spin.setValue(int(self.sim_ros_domain_id))
+            return
+
+        try:
+            saved = save_sim_ros_domain_id(selected)
+        except (OSError, ValueError) as error:
+            QMessageBox.critical(
+                self, "保存失敗", f"robot.envへDomainを保存できませんでした。\n{error}")
+            self.sim_domain_spin.setValue(int(self.sim_ros_domain_id))
+            return
+
+        self.sim_ros_domain_id = saved
+        os.environ['ROBOTBASE_SIM_ROS_DOMAIN_ID'] = saved
+        self.runtime_info_label.setText(
+            "ボタンを押すとTerminatorのタブで起動します | "
+            f"実機Domain={ROS_DOMAIN_ID} | シミュレーションDomain={saved} | "
+            f"GZ_PARTITION={GZ_PARTITION} | 緑●=起動中")
+        QMessageBox.information(
+            self,
+            "保存完了",
+            f"シミュレーションROS_DOMAIN_IDを{saved}へ保存しました。\n"
+            "次に起動するGazebo、RViz、Nav2、SLAMから反映されます。",
+        )
+
+    def stop_all_simulation(self):
+        """Stop the isolated simulation graph, including orphaned processes."""
+        answer = QMessageBox.question(
+            self,
+            "シミュレーション一式を終了",
+            f"ROS_DOMAIN_ID={self.sim_ros_domain_id}のGazebo、RViz、Nav2、SLAM等を"
+            "すべて終了します。\n\n実行しますか？",
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No,
+        )
+        if answer != QMessageBox.Yes:
+            return
+
+        script = WORKSPACE / 'bash' / 'startup_bash' / 'stop_simulation.sh'
+        cleanup_environment = os.environ.copy()
+        cleanup_environment['ROBOTBASE_STOP_SIM_DOMAIN'] = self.sim_ros_domain_id
+        try:
+            result = subprocess.run(
+                ['bash', str(script)],
+                capture_output=True,
+                text=True,
+                timeout=15,
+                check=False,
+                env=cleanup_environment,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            QMessageBox.critical(
+                self, "終了失敗", f"シミュレーションを終了できませんでした。\n{error}")
+            return
+
+        output = '\n'.join(
+            part.strip() for part in (result.stdout, result.stderr) if part.strip())
+        if result.returncode == 0:
+            for button in self.buttons:
+                if button.name == f'{ROBOT_ID}_sim' or '_sim' in button.name:
+                    button.process_manager.pid_file_content = None
+                    button.update_status(False)
+            QMessageBox.information(
+                self,
+                "終了完了",
+                output or "シミュレーション一式を終了しました。",
+            )
+        else:
+            QMessageBox.warning(
+                self,
+                "一部終了失敗",
+                output or f"終了処理がコード{result.returncode}で失敗しました。",
+            )
 
     def add_group(self, title, tab_name=None):
         """グループボックスを追加（タブ対応）"""

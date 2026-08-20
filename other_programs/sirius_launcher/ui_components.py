@@ -2,12 +2,12 @@
 
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout,
-    QPushButton, QLabel, QGroupBox
+    QPushButton, QLabel, QGroupBox, QSpinBox
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
-from robot_config import GZ_PARTITION, ROS_DOMAIN_ID
+from robot_config import GZ_PARTITION, ROS_DOMAIN_ID, SIM_ROS_DOMAIN_ID
 
 
 class LaunchButtonUI(QWidget):
@@ -109,15 +109,54 @@ class MainWindowUI:
         reload_btn.setStyleSheet("background-color: #28a745; color: white; font-weight: bold; border-radius: 4px; padding: 5px;")
         header_layout.addWidget(reload_btn)
 
+        # Domain内に残ったGazebo/Nav2/RVizをまとめて終了する非常停止ボタン。
+        stop_simulation_btn = QPushButton("🛑 シミュレーション一式を終了")
+        stop_simulation_btn.setMinimumWidth(220)
+        stop_simulation_btn.setStyleSheet(
+            "background-color: #dc3545; color: white; font-weight: bold; "
+            "border-radius: 4px; padding: 5px;")
+        stop_simulation_btn.setToolTip(
+            "ココちゃんのシミュレーションDomainに属するGazebo、RViz、"
+            "Nav2、SLAM等を終了します")
+        header_layout.addWidget(stop_simulation_btn)
+        window.stop_simulation_btn = stop_simulation_btn
+
         main_layout.addLayout(header_layout)
+
+        # Simulation ROS Domain can be changed and persisted without editing files.
+        domain_layout = QHBoxLayout()
+        domain_layout.addStretch(1)
+        domain_label = QLabel("シミュレーション ROS_DOMAIN_ID:")
+        domain_layout.addWidget(domain_label)
+        sim_domain_spin = QSpinBox()
+        sim_domain_spin.setRange(0, 232)
+        sim_domain_spin.setValue(int(SIM_ROS_DOMAIN_ID))
+        sim_domain_spin.setFixedWidth(80)
+        sim_domain_spin.setToolTip(
+            "Gazebo、シミュレーションRViz、Nav2、SLAMで共通使用します。既定値は58です")
+        domain_layout.addWidget(sim_domain_spin)
+        save_sim_domain_btn = QPushButton("💾 Domainを保存")
+        save_sim_domain_btn.setStyleSheet(
+            "background-color: #6f42c1; color: white; font-weight: bold; "
+            "border-radius: 4px; padding: 5px;")
+        domain_layout.addWidget(save_sim_domain_btn)
+        default_domain_label = QLabel("既定値: 58")
+        default_domain_label.setStyleSheet("color: gray;")
+        domain_layout.addWidget(default_domain_label)
+        domain_layout.addStretch(1)
+        main_layout.addLayout(domain_layout)
+        window.sim_domain_spin = sim_domain_spin
+        window.save_sim_domain_btn = save_sim_domain_btn
 
         # 情報ラベル
         info_label = QLabel(
             "ボタンを押すとTerminatorのタブで起動します | "
-            f"ROS_DOMAIN_ID={ROS_DOMAIN_ID} | GZ_PARTITION={GZ_PARTITION} | 緑●=起動中")
+            f"実機Domain={ROS_DOMAIN_ID} | シミュレーションDomain={SIM_ROS_DOMAIN_ID} | "
+            f"GZ_PARTITION={GZ_PARTITION} | 緑●=起動中")
         info_label.setStyleSheet("color: gray; font-style: italic;")
         info_label.setAlignment(Qt.AlignCenter)
         main_layout.addWidget(info_label)
+        window.runtime_info_label = info_label
 
         # プリセットセクション
         preset_group = QGroupBox("プリセット")

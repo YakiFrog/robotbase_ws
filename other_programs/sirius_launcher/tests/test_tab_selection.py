@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+import tempfile
 import unittest
 
 # Ensure the project root is on sys.path so imports work
@@ -13,7 +14,12 @@ from PySide6.QtCore import QEvent, QPointF, Qt
 
 from other_programs.sirius_launcher.robot_launcher import RobotLauncher
 from other_programs.sirius_launcher.alias_parser import parse_bash_aliases
-from other_programs.sirius_launcher.robot_config import ALIAS_FILE
+from other_programs.sirius_launcher.robot_config import (
+    ALIAS_FILE,
+    SIM_ROS_DOMAIN_ID,
+    _read_env_file,
+    save_sim_ros_domain_id,
+)
 
 
 class TestTabSelection(unittest.TestCase):
@@ -44,6 +50,37 @@ class TestTabSelection(unittest.TestCase):
         btn.launch_btn.event(event)
 
         self.assertEqual(window.tab_widget.currentIndex(), btn.tab_index)
+
+    def test_stop_all_simulation_button_is_visible(self):
+        window = RobotLauncher()
+
+        self.assertTrue(window.stop_simulation_btn.isVisibleTo(window))
+        self.assertIn('シミュレーション一式を終了', window.stop_simulation_btn.text())
+        self.assertEqual(window.sim_domain_spin.value(), int(SIM_ROS_DOMAIN_ID))
+        self.assertIn('Domainを保存', window.save_sim_domain_btn.text())
+
+    def test_simulation_domain_is_persisted_without_losing_other_settings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            config_file = Path(directory) / 'robot.env'
+            config_file.write_text(
+                '# keep this comment\n'
+                'ROBOTBASE_DISPLAY_NAME="ココちゃん"\n'
+                'ROBOTBASE_ROS_DOMAIN_ID="57"\n'
+                'ROBOTBASE_SIM_ROS_DOMAIN_ID="58"\n'
+                'ROBOTBASE_GZ_PARTITION="koko"\n',
+                encoding='utf-8',
+            )
+
+            saved = save_sim_ros_domain_id('59', config_file)
+            values = _read_env_file(config_file)
+
+            self.assertEqual(saved, '59')
+            self.assertEqual(values['ROBOTBASE_SIM_ROS_DOMAIN_ID'], '59')
+            self.assertEqual(values['ROBOTBASE_DISPLAY_NAME'], 'ココちゃん')
+            self.assertIn('# keep this comment', config_file.read_text(encoding='utf-8'))
+
+            with self.assertRaises(ValueError):
+                save_sim_ros_domain_id('57', config_file)
 
     def test_simulation_commands_are_grouped_and_split_by_map_mode(self):
         groups, presets = parse_bash_aliases(ALIAS_FILE)

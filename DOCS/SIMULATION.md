@@ -205,7 +205,9 @@ ros2 launch robotbase_sim navigation.launch.py localization:=static
 
 各 `koko_sim` 起動は `GZ_PARTITION` にプロセス固有の接尾辞を加えます。またGazebo内部のセンサー・odom・速度トピックも `/robot/...` に分離してからROS側の標準トピックへbridgeします。ROS graph自体も実機Domain 57とシミュレーションDomain 58へ分けるため、実機や別PCの`/clock`、TF、`/scan3`は混入しません。
 
-`koko_sim`は起動中ロックを保持し、Domain 58に既存`/clock`または残存RViz/Nav2/SLAMがある場合は起動を拒否する。Gazeboだけを再起動して古いRVizへ0秒からの時刻を送ると、`TF_OLD_DATA`、`Detected jump back in time`、RVizの異常終了を引き起こすためである。再起動時はシミュレーション関連端末をすべて閉じてから、`koko_sim`、RViz、SLAM/Nav2の順に起動する。
+`koko_sim`は起動中ロックを保持し、設定中のシミュレーションDomainに既存`/clock`または残存RViz/Nav2/SLAMがある場合は起動を拒否する。Gazeboだけを再起動して古いRVizへ0秒からの時刻を送ると、`TF_OLD_DATA`、`Detected jump back in time`、RVizの異常終了を引き起こすためである。再起動時はランチャー上部の赤い「シミュレーション一式を終了」を押し、完了表示後に`koko_sim`、RViz、SLAM/Nav2の順に起動する。端末だけの場合は`bash ~/robotbase_ws/bash/startup_bash/stop_simulation.sh`で同じ終了処理を実行できる。
+
+Domain 58は既定値であり、ランチャー上部の数値欄と「Domainを保存」で変更・永続化できる。保存先は`robot.env`で、全`koko_*_sim`コマンドが同じ値を読む。Domain変更は古いGazeboを終了する代わりにはならないため、現在のDomainにプロセスが残っている場合は先に赤い終了ボタンを使う。
 
 シミュレーションでは0.1 m/s付近の指令で停止状態に留まる事例があったため、Keyop2の直進刻みを0.20 m/sとし、Nav2 MPPIへ`VelocityDeadbandCritic: 0.12 m/s`を設定する。velocity smootherは0.10 m/s未満を0へ丸める。Gazebo DiffDrive自体は起動時に有効になるため、`/model/robot/enable`の外部publishには依存しない。
 

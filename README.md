@@ -54,7 +54,7 @@ koko_waypoint_record_sim
 
 `koko_nav2_sim_map` は同梱・保存済み地図を端末の一覧から選択し、AMCLを起動します。RVizの `2D Pose Estimate` で初期姿勢を指定できます。`koko_nav2_sim_slam` は地図なしでSLAM ToolboxとNav2を同時に使います。GazeboとRVizはどちらのモードでも別起動です。`twist_mux` は `koko_sim` に含まれるため、シミュレーションで別起動する必要はありません。
 
-実機ROS graphはDomain 57、シミュレーションはDomain 58に分離しています。`koko_*_sim`コマンドは自動的に58を選ぶため、実機や別PCの`/clock`がRVizへ混入しません。Gazeboを再起動するときは先に旧RViz・Nav2・SLAM端末も終了してください。`koko_sim`は二重起動や残存ノードを検出すると、安全のため起動を拒否します。
+実機ROS graphはDomain 57、シミュレーションは既定Domain 58に分離しています。ランチャーの「シミュレーション ROS_DOMAIN_ID」で0〜232を選んで保存でき、`robot.env`へ永続化されます。`koko_*_sim`コマンドは保存値を自動的に使うため、実機や別PCの`/clock`がRVizへ混入しません。Gazeboを再起動するときは、ランチャー上部の赤い「シミュレーション一式を終了」ボタンで旧Gazebo・RViz・Nav2・SLAMを終了してください。`koko_sim`は二重起動や残存ノードを検出すると、安全のため起動を拒否します。
 
 ## 速度指令の経路
 
