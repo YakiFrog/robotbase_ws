@@ -34,7 +34,7 @@ class WaypointFollower(Node):
         self.declare_parameter('default_threshold', 1.0)
         self.declare_parameter('precise_threshold', 0.35)
         self.declare_parameter('stop_duration', 5.0)
-        self.declare_parameter('stop_on_failure', True)
+        self.declare_parameter('stop_on_failure', False)
         self.declare_parameter('map_frame', 'map')
         self.declare_parameter('base_frame', f'{default_prefix}/base_footprint')
         self.declare_parameter('safety_cmd_vel_topic', '/cmd_vel_direct')
@@ -73,7 +73,6 @@ class WaypointFollower(Node):
         self.goal_serial = 0
         self.transition_in_progress = False
         self.holding_stop = False
-        self.stop_lock_at = None
         self.waiting_until = None
         self.waiting_finishes_route = False
         self.finished = False
@@ -82,7 +81,8 @@ class WaypointFollower(Node):
         self._publish_stop(False)
         self.get_logger().info(
             f"Loaded {len(self.waypoints)} waypoints from '{waypoint_file}', "
-            f'start={requested_index}, loop={self.loop}, frame={self.base_frame}')
+            f'start={requested_index}, loop={self.loop}, frame={self.base_frame}, '
+            f'stop_on_failure={self.stop_on_failure}')
 
     def start(self) -> None:
         """Wait for Nav2 and dispatch the first waypoint."""
@@ -101,9 +101,8 @@ class WaypointFollower(Node):
         self.safety_cmd_vel_publisher.publish(Twist())
 
     def _begin_holding_stop(self) -> None:
-        """Send zero through twist_mux before engaging its indefinite lock."""
+        """Hold position by commanding zero velocity without engaging hardware emergency stop."""
         self.holding_stop = True
-        self.stop_lock_at = self.get_clock().now() + Duration(seconds=0.2)
         self._publish_stop(False)
         self._publish_safety_zero()
 
@@ -170,8 +169,6 @@ class WaypointFollower(Node):
     def _timer_callback(self) -> None:
         if self.holding_stop:
             self._publish_safety_zero()
-            if self.get_clock().now() >= self.stop_lock_at:
-                self._publish_stop(True)
         if self.finished:
             return
         if self.transition_in_progress:
@@ -181,8 +178,6 @@ class WaypointFollower(Node):
         if self.waiting_until is not None:
             if self.get_clock().now() >= self.waiting_until:
                 self.holding_stop = False
-                self.stop_lock_at = None
-                self._publish_stop(False)
                 self.waiting_until = None
                 if self.waiting_finishes_route:
                     self._complete_or_loop()
@@ -306,9 +301,18 @@ class WaypointFollower(Node):
         self.get_logger().error(f'[WP:{waypoint.number}] {message}')
         if self.stop_on_failure:
             self.finished = True
-            self._begin_holding_stop()
+            self.holding_stop = False
+            self._publish_safety_zero()
+            self._publish_stop(False)
             self.get_logger().error('Waypoint following stopped because stop_on_failure=true')
+            rclpy.shutdown()
         else:
+            self.get_logger().warning(
+                f'[WP:{waypoint.number}] Skipping failed waypoint and continuing '
+                f'to next waypoint (stop_on_failure=false)')
+            self.transition_in_progress = False
+            self.goal_handle = None
+            self.goal_result_future = None
             if self.index == len(self.waypoints) - 1:
                 self._complete_or_loop()
             else:

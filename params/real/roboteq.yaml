@@ -8,7 +8,7 @@ roboteq_ros2_driver:
     odom_topic: odom
     port: /dev/roboteq
     baud: 230400
-    open_loop: true
+    open_loop: false
     wheel_circumference: 0.6283
     track_width: 0.435
     max_amps: 12.0
@@ -19,7 +19,7 @@ roboteq_ros2_driver:
     odom_stream_interval_ms: 10
     odom_publish_hz: 50.0
     speed_scale: 0.70
-    kp_soft: 0.0
+    kp_soft: 0.3
     min_speed_threshold: 0.18
     encoder_sign_r: -1.0
     encoder_sign_l: 1.0

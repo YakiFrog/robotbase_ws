@@ -17,7 +17,8 @@ SIRIUSから引き継いだもの:
 - SIRIUSの固定パスを廃止し、`robotbase_ws/maps_waypoints/waypoints/`へ集約
 - LLM用`/nav_control`、地図切替shell、SIRIUS固有トピックを含めない
 - 中間点で旧Nav2 goalのキャンセル完了を待ってから次を送る
-- 停止時は`/cmd_vel_direct`へゼロ速度を通した後に`/stop`をロックする
+- 停止時は`/cmd_vel_direct`へゼロ速度を送り安全に停止を維持する
+- 失敗時は`stop_on_failure: false`（既定）でスキップして次のウェイポイントへ自動遷移する
 - YAMLの値とファイル存在を起動時に検証し、同一goalの周期的な再送を行わない
 
 `change_map`と`rotate`は未対応。地図は先に`koko_nav2_real`または`koko_nav2_sim_map`で選択する。
